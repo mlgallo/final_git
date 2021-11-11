@@ -1,0 +1,301 @@
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(rio)
+library(readr)
+library(haven)
+library(here)
+library(tidyverse)
+library(janitor)
+library(ggplot2)
+library(plotly)
+library(ggridges)
+library(party)
+```
+
+## Passengers Data
+
+### Load data
+```{r}
+dat <- import(here("data", "dat.csv")) %>% 
+   clean_names() %>% 
+   mutate_all(na_if,"")
+```
+
+### Clean data
+```{r}
+dat$gender <- as.factor(dat$gender)
+dat$marital_status <- as.factor(dat$marital_status)
+dat$category <- as.factor(dat$category)
+dat$class <- as.factor(dat$class)
+dat$status <- as.factor(dat$survived)
+dat$embarked <- as.factor(dat$embarked)
+dat$disembarked  <- as.factor(dat$disembarked)
+
+dat <- dat %>% 
+ mutate(nationality2 = case_when(nationality == "English" ~ "English",
+   nationality == "Irish" ~ "Irish",
+   nationality == "American" ~ "American",
+   nationality == "Swedish" ~ "Swedish",
+   nationality == "Finnish" ~ "Finnish",
+   nationality == "Scottish" ~ "Scottish",
+   nationality == "French" ~ "French",
+   nationality == "Italian" ~ "Italian",
+   nationality == "Canadian" ~ "Canadian",
+   nationality == "Bulgarian" ~ "Bulgarian",
+   nationality == "Croatian" ~ "Croatian",
+   nationality == "Belgian" ~ "Belgian",
+   nationality == "Norwegian" ~ "Norwegian",
+   nationality == "Channel Islander" ~ "Channel Islander",
+   nationality == "Welsh" ~ "Welsh",
+   nationality == "Swiss" ~ "Swiss",
+   nationality == "German" ~ "German",
+   nationality == "Danish" ~ "Danish",
+   nationality == "Spanish" ~ "Spanish",
+   nationality == "Australian" ~ "Australian",
+   nationality == "Polish" ~ "Polish",
+   nationality == "South African" ~ "South African",
+   nationality == "Bosnian" ~ "Bosnian",
+   nationality == "Hong Kongese" ~ "Hong Kongese",
+   nationality == "Dutch" ~ "Dutch",
+   nationality == "Lithuanian" ~ "Lithuanian",
+   nationality == "Greek" ~ "Greek",
+   nationality == "Portuguese" ~ "Portuguese",
+   nationality == "Uruguayan" ~ "Uruguayan",
+   nationality == "Chinese" ~ "Chinese",
+   nationality == "Slovenian" ~ "Slovenian",
+   nationality == "Cape Verdean" ~ "Cape Verdean",
+   nationality == "Egyptian" ~ "Egyptian",
+   nationality == "Japanese" ~ "Japanese",
+   nationality == "Hungarian" ~ "Hungarian",
+   nationality == "Bosnian" ~ "Bosnian",
+   nationality == "Hong Kongese" ~ "Hong Kongese",
+   nationality == "Latvian" ~ "Latvian",
+   nationality == "Austrian" ~ "Austrian",
+   nationality == "Greek" ~ "Greek",
+   nationality == "Mexican" ~ "Mexican",
+   nationality == "Sweden" ~ "Sweedish",
+   nationality == "Turkish" ~ "Turkish",
+   nationality == "Slovenian" ~ "Slovenian",
+   nationality == "Guyanese" ~ "Guyanese",
+   nationality == "Haitian" ~ "Haitian",
+   nationality == "Syrian,Lebanese" ~ "Syrian/Lebanese",
+   nationality == "Unknown" ~ "Unknown",
+   TRUE ~ "Other - Multiple", ))
+
+dat <- dat %>% 
+   mutate(nationality2 = ifelse(nationality2 == "Unknown", NA, nationality2))
+```
+
+### Descriptives
+```{r}
+# Breakdown of passengers by class and gender
+dat %>% 
+   filter(category == "Passenger") %>% 
+   filter(!is.na(gender)) %>% 
+   group_by(class, gender) %>% 
+   summarize(count = n()) %>% 
+   mutate(percent = (count/sum(count))*100)
+
+# Breakdown of passenger nationalities
+dat %>% 
+   filter(!is.na(nationality2)) %>% 
+   group_by(nationality2) %>% 
+   summarize(count = n()) %>% 
+   mutate(percent = (count/sum(count))*100) %>% 
+   arrange(desc(percent))
+
+# Breakdown of passenger nationalities by class (all)
+dat %>% 
+   filter(category == "Passenger") %>% 
+   filter(!is.na(nationality2)) %>% 
+   group_by(class, nationality2) %>% 
+   summarize(count = n()) %>% 
+   mutate(percent = (count/sum(count))*100) %>% 
+   arrange(class, desc(percent))
+
+# Breakdown of passenger nationalities by class (>= 5%)
+dat %>% 
+   filter(category == "Passenger") %>% 
+   filter(!is.na(nationality2)) %>% 
+   group_by(class, nationality2) %>% 
+   summarize(count = n()) %>% 
+   mutate(percent = (count/sum(count))*100) %>% 
+   filter(percent >= 5) %>% 
+   arrange(class, desc(percent))
+
+# Average age by class
+dat %>% 
+   filter(category == "Passenger") %>% 
+   filter(!is.na(age)) %>% 
+   group_by(class) %>% 
+   summarize(avg_age = mean(age), min_age = min(age), max_age = max(age))
+
+# Survival rate by class
+dat %>% 
+   filter(category == "Passenger") %>% 
+   filter(!is.na(survived)) %>% 
+   group_by(class, survived) %>% 
+   summarize(count = n()) %>% 
+   mutate(percent = (count/sum(count))*100) %>% 
+   arrange(class, survived)
+
+# Survival rate by gender
+dat %>% 
+   filter(category == "Passenger") %>% 
+   filter(!is.na(survived)) %>% 
+   group_by(gender, survived) %>% 
+   summarize(count = n()) %>% 
+   mutate(percent = (count/sum(count))*100) %>% 
+   arrange(gender, survived)
+
+# Survival rate by class and gender
+dat %>% 
+   filter(category == "Passenger") %>% 
+   filter(!is.na(survived)) %>% 
+   group_by(class, gender, survived) %>% 
+   summarize(count = n()) %>% 
+   mutate(percent = (count/sum(count))*100) %>% 
+   arrange(class, gender)
+```
+
+### Density ridges
+```{r}
+surv_classhist <- dat %>% 
+   filter(category == "Passenger") %>% 
+   filter(!is.na(age)) %>% 
+   filter(!is.na(survived)) %>% 
+   ggplot(aes(age, class)) +
+   geom_density_ridges(aes(fill = factor(survived))) +
+   labs(title = "Age Distribution of Survival Status By Class", 
+   x = "Age Distribution", y = "Passenger Class") +
+   theme_minimal() +
+   theme(plot.title = element_text(hjust = 0.5))
+
+surv_classhist + scale_fill_manual(name = "Survival", values = c("black","dark red"))
+
+surv_agehist <- dat %>% 
+   filter(category == "Passenger") %>% 
+   filter(!is.na(age)) %>% 
+   filter(!is.na(survived)) %>% 
+   ggplot(aes(age, gender)) +
+   geom_density_ridges(aes(fill = factor(survived))) +
+   labs(title = "Age Distribution of Survival Status By Gender", 
+   x = "Age Distribution", y = "Passenger Gender") +
+   theme_minimal() +
+   theme(plot.title = element_text(hjust = 0.5))
+
+surv_agehist + scale_fill_manual(name = "Survival", values = c("black","dark red"))
+
+surv_ageclass_hist <- dat %>% 
+   filter(category == "Passenger") %>% 
+   filter(!is.na(age)) %>% 
+   filter(!is.na(survived)) %>% 
+   ggplot(aes(age, gender)) +
+   facet_wrap(~class, nrow=3) +
+   geom_density_ridges(aes(fill = factor(survived))) +
+   labs(title = "Age Distribution of Survival Status By Class and Gender", 
+   x = "Age Distribution", y = "Passenger Gender") +
+   theme_minimal() +
+   theme(plot.title = element_text(hjust = 0.5))
+
+surv_ageclass_hist + scale_fill_manual(name = "Survival", values = c("black","dark red"))
+
+```
+
+## Fares
+
+### Load data
+```{r}
+fares <- import(here("data", "avgfare.csv")) %>% 
+   clean_names()
+```
+
+### Calculate inflation
+```{r}
+p1921 <- (17.9/9.7)
+fares$fare_1921 <- p1921*fares$fare_1912
+fares$fare_1921 <- round(fares$fare_1921, 2)
+
+p1931 <- (15.2/9.7)
+fares$fare_1931 <- p1931*fares$fare_1912
+fares$fare_1931 <- round(fares$fare_1931, 2)
+
+p1941 <- (14.7/9.7)
+fares$fare_1941 <- p1941*fares$fare_1912
+fares$fare_1941 <- round(fares$fare_1941, 2)
+
+p1951 <- (26.0/9.7)
+fares$fare_1951 <- p1951*fares$fare_1912
+fares$fare_1951 <- round(fares$fare_1951, 2)
+
+p1961 <- (29.9/9.7)
+fares$fare_1961 <- p1961*fares$fare_1912
+fares$fare_1961 <- round(fares$fare_1961, 2)
+
+p1971 <- (40.5/9.7)
+fares$fare_1971 <- p1971*fares$fare_1912
+fares$fare_1971 <- round(fares$fare_1971, 2)
+
+p1981 <- (90.9/9.7)
+fares$fare_1981 <- p1981*fares$fare_1912
+fares$fare_1981 <- round(fares$fare_1981, 2)
+
+p1991 <- (136.2/9.7)
+fares$fare_1991 <- p1991*fares$fare_1912
+fares$fare_1991 <- round(fares$fare_1991, 2)
+
+p2001 <- (177.1/9.7)
+fares$fare_2001 <- p2001*fares$fare_1912
+fares$fare_2001 <- round(fares$fare_2001, 2)
+
+p2011 <- (224.9/9.7)
+fares$fare_2011 <- p2011*fares$fare_1912
+fares$fare_2011 <- round(fares$fare_2011, 2)
+
+p2021 <- (274.3/9.7)
+fares$fare_2021 <- p2021*fares$fare_1912
+fares$fare_2021 <- round(fares$fare_2021, 2)
+
+```
+
+### Reshape fare data
+```{r}
+faredat <- gather(fares, year, price, fare_1912:fare_2021)
+
+faredat <- faredat %>% 
+   mutate(year = case_when(year == "fare_1912" ~ 1912,
+   year == "fare_1921" ~ 1921,
+   year == "fare_1931" ~ 1931,
+   year == "fare_1941" ~ 1941,
+   year == "fare_1951" ~ 1951,
+   year == "fare_1961" ~ 1961,
+   year == "fare_1971" ~ 1971,
+   year == "fare_1981" ~ 1981,
+   year == "fare_1991" ~ 1991,
+   year == "fare_2001" ~ 2001,
+   year == "fare_2011" ~ 2011,
+   year == "fare_2021" ~ 2021, ))
+
+faredat$accommodation <- as.factor(faredat$accommodation)
+
+faredat$accomodation <- factor(faredat$accommodation, levels = c("First-class parlor suite", "First-class cabin", "Second-class cabin", "Third-class cabin"))
+```
+
+## Plot fare inflation
+```{r}
+fare_graph <- faredat %>% 
+   ggplot(aes(year, price, colour=accommodation)) +
+   geom_line() +
+   geom_point() +
+   scale_colour_brewer(palette="Spectral") +
+   facet_wrap(~ accommodation, 4, scales = "free") +
+   xlim(1912,2021) +
+   theme(panel.spacing = unit(1, "lines")) +
+   theme_minimal()
+
+fare_graph
+
+ggplotly(fare_graph)
+```
+
+
