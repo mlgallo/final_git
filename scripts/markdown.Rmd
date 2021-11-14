@@ -10,6 +10,8 @@ library(ggplot2)
 library(plotly)
 library(ggridges)
 library(party)
+library(dplyr)
+library(kableExtra)
 ```
 
 ## Passengers Data
@@ -87,14 +89,19 @@ dat <- dat %>%
 ```
 
 ### Descriptives
-```{r}
+```{r, descriptives, results = "asis"}
 # Breakdown of passengers by class and gender
 dat %>% 
    filter(category == "Passenger") %>% 
    filter(!is.na(gender)) %>% 
    group_by(class, gender) %>% 
    summarize(count = n()) %>% 
-   mutate(percent = (count/sum(count))*100)
+   mutate(percent = (count/sum(count))*100) %>%
+ kable(caption = "Breakdown of Passengers by Class and Gender",
+       col.names = c("Class", "Gender", "Count", "Percent"),
+       digits = 2,
+       booktabs = TRUE) %>%
+ kable_styling()
 
 # Breakdown of passenger nationalities
 dat %>% 
@@ -102,7 +109,12 @@ dat %>%
    group_by(nationality2) %>% 
    summarize(count = n()) %>% 
    mutate(percent = (count/sum(count))*100) %>% 
-   arrange(desc(percent))
+   arrange(desc(percent)) %>%
+ kable(caption = "Breakdown of Passenger Nationalities",
+       col.names = c("Nationality", "Count", "Percent"),
+       digits = 2,
+       booktabs = TRUE) %>%
+ kable_styling()
 
 # Breakdown of passenger nationalities by class (all)
 dat %>% 
@@ -111,7 +123,12 @@ dat %>%
    group_by(class, nationality2) %>% 
    summarize(count = n()) %>% 
    mutate(percent = (count/sum(count))*100) %>% 
-   arrange(class, desc(percent))
+   arrange(class, desc(percent)) %>%
+ kable(caption = "Breakdown of Passenger Nationalities by Class (All)",
+       col.names = c("Class", "Nationality", "Count", "Percent"),
+       digits = 2,
+       booktabs = TRUE) %>%
+ kable_styling()
 
 # Breakdown of passenger nationalities by class (>= 5%)
 dat %>% 
@@ -121,14 +138,24 @@ dat %>%
    summarize(count = n()) %>% 
    mutate(percent = (count/sum(count))*100) %>% 
    filter(percent >= 5) %>% 
-   arrange(class, desc(percent))
+   arrange(class, desc(percent)) %>%
+ kable(caption = "Breakdown of Passenger Nationalities by Class (>= 5%)",
+       col.names = c("Class", "Nationality", "Count", "Percent"),
+       digits = 2,
+       booktabs = TRUE) %>%
+ kable_styling()
 
 # Average age by class
 dat %>% 
    filter(category == "Passenger") %>% 
    filter(!is.na(age)) %>% 
    group_by(class) %>% 
-   summarize(avg_age = mean(age), min_age = min(age), max_age = max(age))
+   summarize(avg_age = mean(age), min_age = min(age), max_age = max(age)) %>%
+ kable(caption = "Average Age by Class",
+       col.names = c("Class", "Average Age", "Minimum Age", "Maximum Age"),
+       digits = 2,
+       booktabs = TRUE) %>%
+ kable_styling()
 
 # Survival rate by class
 dat %>% 
@@ -137,7 +164,12 @@ dat %>%
    group_by(class, survived) %>% 
    summarize(count = n()) %>% 
    mutate(percent = (count/sum(count))*100) %>% 
-   arrange(class, survived)
+   arrange(class, survived) %>%
+ kable(caption = "Survival Rate by Class",
+       col.names = c("Class", "Survived", "Count", "Percent"),
+       digits = 2,
+       booktabs = TRUE) %>%
+ kable_styling()
 
 # Survival rate by gender
 dat %>% 
@@ -146,7 +178,12 @@ dat %>%
    group_by(gender, survived) %>% 
    summarize(count = n()) %>% 
    mutate(percent = (count/sum(count))*100) %>% 
-   arrange(gender, survived)
+   arrange(gender, survived) %>%
+ kable(caption = "Survival Rate by Gender",
+       col.names = c("Gender", "Survived", "Count", "Percent"),
+       digits = 2,
+       booktabs = TRUE) %>%
+ kable_styling()
 
 # Survival rate by class and gender
 dat %>% 
@@ -155,7 +192,12 @@ dat %>%
    group_by(class, gender, survived) %>% 
    summarize(count = n()) %>% 
    mutate(percent = (count/sum(count))*100) %>% 
-   arrange(class, gender)
+   arrange(class, gender) %>%
+ kable(caption = "Survival Rate by Class and Gender",
+       col.names = c("Class", "Gender", "Survived", "Count", "Percent"),
+       digits = 2,
+       booktabs = TRUE) %>%
+ kable_styling()
 ```
 
 ### Density ridges
