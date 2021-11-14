@@ -104,6 +104,9 @@ dat <- dat %>%
 dat <- dat %>% 
    mutate(nationality2 = ifelse(nationality2 == "Unknown", NA, nationality2))
 
+dat2 <- dat %>% 
+   filter(category=="Passenger") %>% 
+   mutate(fate = ifelse(survived == "Saved", 1, 0))
 ```
 
 ### Descriptives
@@ -367,5 +370,30 @@ firstavg2021 <- "$4241.74"
 ```
 
 When taking inflation rates into consideration, we see that the average price for a 1st class cabin in 1912 was **`r firstavg1912`**, which today would be **`r firstavg2021`**
+
+## Model
+```{r}
+model <- glm(status ~ age + gender + class, data = dat2, family = "binomial")
+summary(model)
+exp(coefficients(model))
+
+model2 <- glm(status ~ age + gender + class + age*gender, data = dat2, family = "binomial")
+summary(model2)
+exp(coefficients(model2))
+
+model3 <- glm(status ~ age + gender + class + age*gender*class, data = dat2, family = "binomial")
+summary(model3)
+exp(coefficients(model3))
+
+dat2$survived <- as.factor(dat2$survived)
+
+dat2 <- dat2[complete.cases(dat2[ , c("fate")]), ]
+
+ctree <- ctree(survived ~ age + gender + class,
+data=dat2)
+ctree
+plot(ctree)
+
+```
 
 **References**
