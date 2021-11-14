@@ -1,5 +1,20 @@
+---
+title: EDLD Final Project
+author: Lauren Berny, Adriana Conn, Mavis Gallo, Aubrey Green, Shawn McWeeney
+output: 
+   html_document:
+      code_folding: hide
+bibliography: references.bib
+---
+
+The packages used in this project are:
+Rio: @riopackage
+Readr: @readrpackage
+Haven: @havenpackage
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
 library(rio)
 library(readr)
 library(haven)
@@ -12,6 +27,8 @@ library(ggridges)
 library(party)
 library(dplyr)
 library(kableExtra)
+library(tinytex)
+
 ```
 
 ## Passengers Data
@@ -86,6 +103,7 @@ dat <- dat %>%
 
 dat <- dat %>% 
    mutate(nationality2 = ifelse(nationality2 == "Unknown", NA, nationality2))
+
 ```
 
 ### Descriptives
@@ -321,6 +339,7 @@ faredat <- faredat %>%
 faredat$accommodation <- as.factor(faredat$accommodation)
 
 faredat$accomodation <- factor(faredat$accommodation, levels = c("First-class parlor suite", "First-class cabin", "Second-class cabin", "Third-class cabin"))
+
 ```
 
 ## Plot fare inflation
@@ -339,5 +358,7 @@ fare_graph
 
 ggplotly(fare_graph)
 ```
+When taking inflation rates into consideration, we see that the average price for a 1st class cabin in 1912 was , which today would be 
 
 
+**References**
