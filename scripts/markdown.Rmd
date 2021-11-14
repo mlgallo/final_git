@@ -358,7 +358,14 @@ fare_graph
 
 ggplotly(fare_graph)
 ```
-When taking inflation rates into consideration, we see that the average price for a 1st class cabin in 1912 was , which today would be 
 
+```{r echo=FALSE, include=FALSE}
+
+firstavg1912 <- "$150"
+firstavg2021 <- "$4241.74"
+
+```
+
+When taking inflation rates into consideration, we see that the average price for a 1st class cabin in 1912 was **`r firstavg1912`**, which today would be **`r firstavg2021`**
 
 **References**
