@@ -1,9 +1,11 @@
 ---
-title: EDLD Final Project
-author: Lauren Berny, Adriana Conn, Mavis Gallo, Aubrey Green, Shawn McWeeney
-output: 
-   html_document:
-      code_folding: hide
+title: "EDLD Final Project"
+author: "Lauren Berny, Adriana Conn, Mavis Gallo, Aubrey Green, Shawn McWeeney"
+output:
+  html_document:
+    code_folding: show
+    toc: true
+    toc_float: true
 bibliography: references.bib
 ---
 
@@ -13,7 +15,7 @@ Readr: @readrpackage
 Haven: @havenpackage
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 
 library(rio)
 library(readr)
@@ -21,32 +23,31 @@ library(haven)
 library(here)
 library(tidyverse)
 library(janitor)
-library(ggplot2)
 library(plotly)
 library(ggridges)
 library(party)
 library(dplyr)
 library(kableExtra)
 library(tinytex)
-
+library(ggparty)
 ```
 
-## Passengers Data
+# Passengers Data
 
-### Load data
+## Load data
 ```{r}
 dat <- import(here("data", "dat.csv")) %>% 
    clean_names() %>% 
    mutate_all(na_if,"")
 ```
 
-### Clean data
+## Clean data
 ```{r}
 dat$gender <- as.factor(dat$gender)
 dat$marital_status <- as.factor(dat$marital_status)
 dat$category <- as.factor(dat$category)
 dat$class <- as.factor(dat$class)
-dat$status <- as.factor(dat$survived)
+dat$survived <- as.factor(dat$survived)
 dat$embarked <- as.factor(dat$embarked)
 dat$disembarked  <- as.factor(dat$disembarked)
 
@@ -104,12 +105,13 @@ dat <- dat %>%
 dat <- dat %>% 
    mutate(nationality2 = ifelse(nationality2 == "Unknown", NA, nationality2))
 
-dat2 <- dat %>% 
+datpass <- dat %>% 
    filter(category=="Passenger") %>% 
-   mutate(fate = ifelse(survived == "Saved", 1, 0))
+   select(survived, gender, class, age) %>% 
+   na.omit()
 ```
 
-### Descriptives
+## Descriptives
 ```{r, descriptives, results = "asis"}
 # Breakdown of passengers by class and gender
 dat %>% 
@@ -151,21 +153,6 @@ dat %>%
        booktabs = TRUE) %>%
  kable_styling()
 
-# Breakdown of passenger nationalities by class (>= 5%)
-dat %>% 
-   filter(category == "Passenger") %>% 
-   filter(!is.na(nationality2)) %>% 
-   group_by(class, nationality2) %>% 
-   summarize(count = n()) %>% 
-   mutate(percent = (count/sum(count))*100) %>% 
-   filter(percent >= 5) %>% 
-   arrange(class, desc(percent)) %>%
- kable(caption = "Breakdown of Passenger Nationalities by Class (>= 5%)",
-       col.names = c("Class", "Nationality", "Count", "Percent"),
-       digits = 2,
-       booktabs = TRUE) %>%
- kable_styling()
-
 # Average age by class
 dat %>% 
    filter(category == "Passenger") %>% 
@@ -177,7 +164,12 @@ dat %>%
        digits = 2,
        booktabs = TRUE) %>%
  kable_styling()
+```
 
+# Examining Survival
+
+## Survival rates
+```{r}
 # Survival rate by class
 dat %>% 
    filter(category == "Passenger") %>% 
@@ -265,15 +257,39 @@ surv_ageclass_hist + scale_fill_manual(name = "Survival", values = c("black","da
 
 ```
 
-## Fares
+## Predicting survival
+```{r}
+ctree <- ctree(survived ~ gender + class + age, data=datpass)
+```
 
-### Load data
+```{r, fig.width=12, fig.height=9.25}
+## Note: We are aware the "saved" and "lost" labels are switched in the first graph and are working to figure out why.
+plot(ctree)
+
+ggparty(ctree) +
+  geom_edge() +
+  geom_edge_label() +
+  geom_node_splitvar() +
+  geom_node_plot(gglist = list(geom_bar(aes(x = "", fill = survived),
+                                        position = position_fill()),
+                               theme_bw(),
+                               xlab("Survival"), ylab("Percentage")),
+                 shared_axis_labels = TRUE,
+                 legend_separator = TRUE,)
+```
+
+# Tickets Prices
+
+## Load data
 ```{r}
 fares <- import(here("data", "avgfare.csv")) %>% 
    clean_names()
+
+fares$accommodation <- as.factor(fares$accommodation)
+fares$accommodation <- factor(fares$accommodation, levels = c("First-class parlor suite", "First-class cabin", "Second-class cabin", "Third-class cabin"))
 ```
 
-### Calculate inflation
+## Calculate inflation
 ```{r}
 p1921 <- (17.9/9.7)
 fares$fare_1921 <- p1921*fares$fare_1912
@@ -318,36 +334,20 @@ fares$fare_2011 <- round(fares$fare_2011, 2)
 p2021 <- (274.3/9.7)
 fares$fare_2021 <- p2021*fares$fare_1912
 fares$fare_2021 <- round(fares$fare_2021, 2)
-
 ```
 
-### Reshape fare data
+## Reshape data
 ```{r}
-faredat <- gather(fares, year, price, fare_1912:fare_2021)
-
-faredat <- faredat %>% 
-   mutate(year = case_when(year == "fare_1912" ~ 1912,
-   year == "fare_1921" ~ 1921,
-   year == "fare_1931" ~ 1931,
-   year == "fare_1941" ~ 1941,
-   year == "fare_1951" ~ 1951,
-   year == "fare_1961" ~ 1961,
-   year == "fare_1971" ~ 1971,
-   year == "fare_1981" ~ 1981,
-   year == "fare_1991" ~ 1991,
-   year == "fare_2001" ~ 2001,
-   year == "fare_2011" ~ 2011,
-   year == "fare_2021" ~ 2021, ))
-
-faredat$accommodation <- as.factor(faredat$accommodation)
-
-faredat$accomodation <- factor(faredat$accommodation, levels = c("First-class parlor suite", "First-class cabin", "Second-class cabin", "Third-class cabin"))
-
+fares_tidy <- fares %>%
+ pivot_longer(cols = starts_with("fare"),
+   names_to = "year",
+   names_prefix = "fare_",
+   values_to = "price", names_transform = list(year = as.integer))
 ```
 
-## Plot fare inflation
+## Inflation-adjustment plot
 ```{r}
-fare_graph <- faredat %>% 
+fare_graph <- fares_tidy %>% 
    ggplot(aes(year, price, colour=accommodation)) +
    geom_line() +
    geom_point() +
@@ -355,45 +355,16 @@ fare_graph <- faredat %>%
    facet_wrap(~ accommodation, 4, scales = "free") +
    xlim(1912,2021) +
    theme(panel.spacing = unit(1, "lines")) +
+   labs(y = "Price ($USD)", x = "Year", title = "Inflation-Adjusted Titanic Ticket Prices", subtitle = "From 1912 to 2021", colour = "Accommodation") +
    theme_minimal()
-
-fare_graph
 
 ggplotly(fare_graph)
 ```
 
 ```{r echo=FALSE, include=FALSE}
-
-firstavg1912 <- "$150"
-firstavg2021 <- "$4241.74"
-
+firstavg1912 <- "$150.00"
+firstavg2021 <- "$4,241.74"
 ```
+When taking inflation rates into consideration, we see that the average price for a first class cabin in 1912 was **`r firstavg1912`**, which today would be **`r firstavg2021`**
 
-When taking inflation rates into consideration, we see that the average price for a 1st class cabin in 1912 was **`r firstavg1912`**, which today would be **`r firstavg2021`**
-
-## Model
-```{r}
-model <- glm(status ~ age + gender + class, data = dat2, family = "binomial")
-summary(model)
-exp(coefficients(model))
-
-model2 <- glm(status ~ age + gender + class + age*gender, data = dat2, family = "binomial")
-summary(model2)
-exp(coefficients(model2))
-
-model3 <- glm(status ~ age + gender + class + age*gender*class, data = dat2, family = "binomial")
-summary(model3)
-exp(coefficients(model3))
-
-dat2$survived <- as.factor(dat2$survived)
-
-dat2 <- dat2[complete.cases(dat2[ , c("fate")]), ]
-
-ctree <- ctree(survived ~ age + gender + class,
-data=dat2)
-ctree
-plot(ctree)
-
-```
-
-**References**
+# **References**
