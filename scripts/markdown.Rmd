@@ -26,10 +26,8 @@ library(janitor)
 library(plotly)
 library(ggridges)
 library(party)
-library(dplyr)
 library(kableExtra)
 library(tinytex)
-library(ggparty)
 ```
 
 # Passengers Data
@@ -37,8 +35,10 @@ library(ggparty)
 ## Load data
 ```{r}
 dat <- import(here("data", "dat.csv")) %>% 
+   filter(Category=="Passenger") %>% 
    clean_names() %>% 
-   mutate_all(na_if,"")
+   mutate_all(na_if,"") %>% 
+   drop_na(survived, gender, class, age)
 ```
 
 ## Clean data
@@ -93,7 +93,7 @@ dat <- dat %>%
    nationality == "Austrian" ~ "Austrian",
    nationality == "Greek" ~ "Greek",
    nationality == "Mexican" ~ "Mexican",
-   nationality == "Sweden" ~ "Sweedish",
+   nationality == "Sweden" ~ "Swedish",
    nationality == "Turkish" ~ "Turkish",
    nationality == "Slovenian" ~ "Slovenian",
    nationality == "Guyanese" ~ "Guyanese",
@@ -104,27 +104,32 @@ dat <- dat %>%
 
 dat <- dat %>% 
    mutate(nationality2 = ifelse(nationality2 == "Unknown", NA, nationality2))
-
-datpass <- dat %>% 
-   filter(category=="Passenger") %>% 
-   select(survived, gender, class, age) %>% 
-   na.omit()
 ```
 
 ## Descriptives
 ```{r, descriptives, results = "asis"}
+# Breakdown of passengers by class
+dat %>% 
+   group_by(class) %>% 
+   summarize(count = n()) %>% 
+   mutate(percent = (count/sum(count))*100) %>% 
+   adorn_totals() %>%
+   kable(caption = "Breakdown of Passengers by Class and Gender",
+       col.names = c("Class", "Count", "Percent"),
+       digits = 2,
+       booktabs = TRUE) %>%
+   kable_styling()
+   
 # Breakdown of passengers by class and gender
 dat %>% 
-   filter(category == "Passenger") %>% 
-   filter(!is.na(gender)) %>% 
    group_by(class, gender) %>% 
    summarize(count = n()) %>% 
    mutate(percent = (count/sum(count))*100) %>%
- kable(caption = "Breakdown of Passengers by Class and Gender",
+   kable(caption = "Breakdown of Passengers by Class and Gender",
        col.names = c("Class", "Gender", "Count", "Percent"),
        digits = 2,
        booktabs = TRUE) %>%
- kable_styling()
+   kable_styling()
 
 # Breakdown of passenger nationalities
 dat %>% 
@@ -133,37 +138,35 @@ dat %>%
    summarize(count = n()) %>% 
    mutate(percent = (count/sum(count))*100) %>% 
    arrange(desc(percent)) %>%
- kable(caption = "Breakdown of Passenger Nationalities",
+   kable(caption = "Breakdown of Passenger Nationalities",
        col.names = c("Nationality", "Count", "Percent"),
        digits = 2,
        booktabs = TRUE) %>%
- kable_styling()
+   kable_styling()
 
-# Breakdown of passenger nationalities by class (all)
+# Breakdown of passenger nationalities by class
 dat %>% 
-   filter(category == "Passenger") %>% 
    filter(!is.na(nationality2)) %>% 
    group_by(class, nationality2) %>% 
    summarize(count = n()) %>% 
    mutate(percent = (count/sum(count))*100) %>% 
    arrange(class, desc(percent)) %>%
- kable(caption = "Breakdown of Passenger Nationalities by Class (All)",
+   kable(caption = "Breakdown of Passenger Nationalities by Class (All)",
        col.names = c("Class", "Nationality", "Count", "Percent"),
        digits = 2,
        booktabs = TRUE) %>%
- kable_styling()
+   kable_styling()
 
 # Average age by class
 dat %>% 
-   filter(category == "Passenger") %>% 
-   filter(!is.na(age)) %>% 
    group_by(class) %>% 
-   summarize(avg_age = mean(age), min_age = min(age), max_age = max(age)) %>%
- kable(caption = "Average Age by Class",
-       col.names = c("Class", "Average Age", "Minimum Age", "Maximum Age"),
+   summarize(avg_age = mean(age), std_age = sd(age), min_age = min(age), 
+             max_age = max(age)) %>%
+   kable(caption = "Average Age by Class",
+       col.names = c("Class", "Average Age", "SD Age", "Minimum Age", "Maximum Age"),
        digits = 2,
        booktabs = TRUE) %>%
- kable_styling()
+   kable_styling()
 ```
 
 # Examining Survival
@@ -172,53 +175,44 @@ dat %>%
 ```{r}
 # Survival rate by class
 dat %>% 
-   filter(category == "Passenger") %>% 
-   filter(!is.na(survived)) %>% 
    group_by(class, survived) %>% 
    summarize(count = n()) %>% 
    mutate(percent = (count/sum(count))*100) %>% 
    arrange(class, survived) %>%
- kable(caption = "Survival Rate by Class",
+   kable(caption = "Survival Rate by Class",
        col.names = c("Class", "Survived", "Count", "Percent"),
        digits = 2,
        booktabs = TRUE) %>%
- kable_styling()
+   kable_styling()
 
 # Survival rate by gender
 dat %>% 
-   filter(category == "Passenger") %>% 
-   filter(!is.na(survived)) %>% 
    group_by(gender, survived) %>% 
    summarize(count = n()) %>% 
    mutate(percent = (count/sum(count))*100) %>% 
    arrange(gender, survived) %>%
- kable(caption = "Survival Rate by Gender",
+   kable(caption = "Survival Rate by Gender",
        col.names = c("Gender", "Survived", "Count", "Percent"),
        digits = 2,
        booktabs = TRUE) %>%
- kable_styling()
+   kable_styling()
 
 # Survival rate by class and gender
 dat %>% 
-   filter(category == "Passenger") %>% 
-   filter(!is.na(survived)) %>% 
    group_by(class, gender, survived) %>% 
    summarize(count = n()) %>% 
    mutate(percent = (count/sum(count))*100) %>% 
    arrange(class, gender) %>%
- kable(caption = "Survival Rate by Class and Gender",
+   kable(caption = "Survival Rate by Class and Gender",
        col.names = c("Class", "Gender", "Survived", "Count", "Percent"),
        digits = 2,
        booktabs = TRUE) %>%
- kable_styling()
+   kable_styling()
 ```
 
 ### Density ridges
 ```{r}
 surv_classhist <- dat %>% 
-   filter(category == "Passenger") %>% 
-   filter(!is.na(age)) %>% 
-   filter(!is.na(survived)) %>% 
    ggplot(aes(age, class)) +
    geom_density_ridges(aes(fill = factor(survived))) +
    labs(title = "Age Distribution of Survival Status By Class", 
@@ -229,9 +223,6 @@ surv_classhist <- dat %>%
 surv_classhist + scale_fill_manual(name = "Survival", values = c("black","dark red"))
 
 surv_agehist <- dat %>% 
-   filter(category == "Passenger") %>% 
-   filter(!is.na(age)) %>% 
-   filter(!is.na(survived)) %>% 
    ggplot(aes(age, gender)) +
    geom_density_ridges(aes(fill = factor(survived))) +
    labs(title = "Age Distribution of Survival Status By Gender", 
@@ -242,9 +233,6 @@ surv_agehist <- dat %>%
 surv_agehist + scale_fill_manual(name = "Survival", values = c("black","dark red"))
 
 surv_ageclass_hist <- dat %>% 
-   filter(category == "Passenger") %>% 
-   filter(!is.na(age)) %>% 
-   filter(!is.na(survived)) %>% 
    ggplot(aes(age, gender)) +
    facet_wrap(~class, nrow=3) +
    geom_density_ridges(aes(fill = factor(survived))) +
@@ -259,24 +247,16 @@ surv_ageclass_hist + scale_fill_manual(name = "Survival", values = c("black","da
 
 ## Predicting survival
 ```{r}
-ctree <- ctree(survived ~ gender + class + age, data=datpass)
+modeldat <- dat %>% 
+   select(survived, gender, class, age)
+
+ctree <- ctree(survived ~ gender + class + age, data=modeldat)
 ```
 
 ```{r, fig.width=12, fig.height=9.25}
-## Note: We are aware the "saved" and "lost" labels are switched in the first graph and are working to figure out why.
 plot(ctree)
-
-ggparty(ctree) +
-  geom_edge() +
-  geom_edge_label() +
-  geom_node_splitvar() +
-  geom_node_plot(gglist = list(geom_bar(aes(x = "", fill = survived),
-                                        position = position_fill()),
-                               theme_bw(),
-                               xlab("Survival"), ylab("Percentage")),
-                 shared_axis_labels = TRUE,
-                 legend_separator = TRUE,)
 ```
+
 
 # Tickets Prices
 
@@ -339,7 +319,7 @@ fares$fare_2021 <- round(fares$fare_2021, 2)
 ## Reshape data
 ```{r}
 fares_tidy <- fares %>%
- pivot_longer(cols = starts_with("fare"),
+   pivot_longer(cols = starts_with("fare"),
    names_to = "year",
    names_prefix = "fare_",
    values_to = "price", names_transform = list(year = as.integer))
@@ -355,7 +335,8 @@ fare_graph <- fares_tidy %>%
    facet_wrap(~ accommodation, 4, scales = "free") +
    xlim(1912,2021) +
    theme(panel.spacing = unit(1, "lines")) +
-   labs(y = "Price ($USD)", x = "Year", title = "Inflation-Adjusted Titanic Ticket Prices", subtitle = "From 1912 to 2021", colour = "Accommodation") +
+   labs(y = "Price ($USD)", x = "Year", title = "Inflation-Adjusted Titanic Ticket Prices",
+        subtitle = "From 1912 to 2021", colour = "Accommodation") +
    theme_minimal()
 
 ggplotly(fare_graph)
