@@ -226,7 +226,6 @@ dat %>%
        digits = 2,
        booktabs = TRUE) %>%
    kable_styling()
- kable_styling()
 
 
 
@@ -322,17 +321,6 @@ ctree <- ctree(survived ~ gender + class + age, data=modeldat)
 plot(ctree)
 
 # PEER Review MV: I am not at all familiar with the ctree command or what it is doing but it appears to be predicting survival rates for each combination of categories as you go down the flowcharts. However, I'm not sure why class appears twice at different levels. If I follow the left most line, it makes sense that female and first class would have highest probability of save rate. But not sure why class appears twice along the same hierarchy. There must be some reasoning behind this but it will be important to clearly explain this in the final write up.
-
-ggparty(ctree) +
-  geom_edge() +
-  geom_edge_label() +
-  geom_node_splitvar() +
-  geom_node_plot(gglist = list(geom_bar(aes(x = "", fill = survived),
-                                        position = position_fill()),
-                               theme_bw(),
-                               xlab("Survival"), ylab("Percentage")),
-                 shared_axis_labels = TRUE,
-                 legend_separator = TRUE,)
 ```
 
 
