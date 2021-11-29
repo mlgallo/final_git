@@ -395,7 +395,7 @@ fares_tidy <- fares %>%
 ```
 
 ## Inflation-adjustment plot
-```{r}
+```{r fig.width=8, fig.height=8}
 # # PEER Review MV: Sweet graph!
 
 fare_graph <- fares_tidy %>% 
