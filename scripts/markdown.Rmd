@@ -51,6 +51,16 @@ dat$survived <- as.factor(dat$survived)
 dat$embarked <- as.factor(dat$embarked)
 dat$disembarked  <- as.factor(dat$disembarked)
 
+# # PEER Review MV: You could consider using dplyr to recode these new variables and then also creating factors that make more sense for some of the variables that have multiple variables. For example, numbering factors based on frequency for marital status. This probably isn't very helpful but a little cleaner than code above.
+# dat <- dat %>%
+#    mutate(gender = as.factor(gender),
+#           marital_status = fct_infreq(marital_status),
+#           category = as.factor(category),
+#           class = as.factor(class),
+#           survived = as.factor(survived),
+#           embarked = as.factor(embarked),
+#           disembarked = as.factor(disembarked))
+
 dat <- dat %>% 
  mutate(nationality2 = case_when(nationality == "English" ~ "English",
    nationality == "Irish" ~ "Irish",
@@ -102,6 +112,11 @@ dat <- dat %>%
    nationality == "Unknown" ~ "Unknown",
    TRUE ~ "Other - Multiple", ))
 
+## PEER Review MV: For Nationality, Consider creating a more collapsed factor variable that only has those nationalities with 10 or more individuals and then an other category. Then you could potentially create a cleaner bar graph. Added some code below
+# dat <- dat %>%
+#    mutate(nationality_cat = fct_lump_min(nationality,10),
+#           nationality_cat = fct_infreq(nationality_cat))
+
 dat <- dat %>% 
    mutate(nationality2 = ifelse(nationality2 == "Unknown", NA, nationality2))
 ```
@@ -145,6 +160,20 @@ dat %>%
    kable_styling()
 
 # Breakdown of passenger nationalities by class
+# # PEER Review MV: - Consider visualizing some of your data that is currently in tables into bar graphs. This one doesn't have all the info on the table, but easier to see which passengers were most represented
+# dat %>%
+#    filter(!is.na(nationality2)) %>% 
+#    group_by(nationality_cat) %>% 
+#    summarize(count = n()) %>% 
+#    mutate(percent = (count/sum(count))*100) %>% 
+#    arrange((percent)) %>%
+#    ggplot(aes(y = nationality_cat)) + 
+#    geom_col(aes(x = percent), fill = "dark red") + 
+#    geom_text(aes(x = percent, label=round(percent,2)), hjust = -.2, size = 3) +
+#    theme_minimal() + 
+#    labs(x = "Percentage of all passenges", y = "Nationality")
+
+# Breakdown of passenger nationalities by class (all)
 dat %>% 
    filter(!is.na(nationality2)) %>% 
    group_by(class, nationality2) %>% 
@@ -157,6 +186,36 @@ dat %>%
        booktabs = TRUE) %>%
    kable_styling()
 
+# Trying pivot wider
+dat_class_tidy <- dat %>% 
+   filter(category == "Passenger") %>% 
+   filter(!is.na(nationality2)) %>% 
+   group_by(class, nationality2) %>% 
+   summarize(count = n()) %>% 
+   mutate(percent = (count/sum(count))*100) %>% 
+   arrange(class, desc(percent)) %>%
+ pivot_wider(
+  names_from = class,
+  values_from = class
+ ) 
+
+# PEER Review MV: Here, I think another good opportunity to visualize tables that intersect Nationality and class. I think you are able to more easily see variation in nationality by class. Interesting how Americans were concentrated in first class, and third class varied much more.
+# dat %>% 
+#    filter(category == "Passenger") %>% 
+#    filter(!is.na(nationality2)) %>% 
+#    group_by(class, nationality_cat) %>% 
+#    summarize(count = n()) %>% 
+#    mutate(percent = (count/sum(count))*100) %>% 
+#    arrange(class, desc(percent)) %>%
+#    ggplot(aes(y = nationality_cat)) + 
+#    geom_col(aes(x = percent), fill = "dark red") + 
+#    facet_wrap(~fct_infreq(class)) +
+#    geom_text(aes(x = percent, label=round(percent,2)), hjust = -.1, size = 3) +
+#    theme_minimal() +
+#    labs(x = "Percent of passengers by class", y = "Nationality")
+
+
+
 # Average age by class
 dat %>% 
    group_by(class) %>% 
@@ -167,6 +226,10 @@ dat %>%
        digits = 2,
        booktabs = TRUE) %>%
    kable_styling()
+ kable_styling()
+
+
+
 ```
 
 # Examining Survival
@@ -212,6 +275,8 @@ dat %>%
 
 ### Density ridges
 ```{r}
+## PEER Review MV: Cool graphs! 
+
 surv_classhist <- dat %>% 
    ggplot(aes(age, class)) +
    geom_density_ridges(aes(fill = factor(survived))) +
@@ -255,6 +320,19 @@ ctree <- ctree(survived ~ gender + class + age, data=modeldat)
 
 ```{r, fig.width=12, fig.height=9.25}
 plot(ctree)
+
+# PEER Review MV: I am not at all familiar with the ctree command or what it is doing but it appears to be predicting survival rates for each combination of categories as you go down the flowcharts. However, I'm not sure why class appears twice at different levels. If I follow the left most line, it makes sense that female and first class would have highest probability of save rate. But not sure why class appears twice along the same hierarchy. There must be some reasoning behind this but it will be important to clearly explain this in the final write up.
+
+ggparty(ctree) +
+  geom_edge() +
+  geom_edge_label() +
+  geom_node_splitvar() +
+  geom_node_plot(gglist = list(geom_bar(aes(x = "", fill = survived),
+                                        position = position_fill()),
+                               theme_bw(),
+                               xlab("Survival"), ylab("Percentage")),
+                 shared_axis_labels = TRUE,
+                 legend_separator = TRUE,)
 ```
 
 
@@ -271,6 +349,9 @@ fares$accommodation <- factor(fares$accommodation, levels = c("First-class parlo
 
 ## Calculate inflation
 ```{r}
+
+## PEER Review MV: Would be great to know where these numbers are coming from, a little bit more annotation would be helpful.
+
 p1921 <- (17.9/9.7)
 fares$fare_1921 <- p1921*fares$fare_1912
 fares$fare_1921 <- round(fares$fare_1921, 2)
@@ -327,6 +408,8 @@ fares_tidy <- fares %>%
 
 ## Inflation-adjustment plot
 ```{r}
+# # PEER Review MV: Sweet graph!
+
 fare_graph <- fares_tidy %>% 
    ggplot(aes(year, price, colour=accommodation)) +
    geom_line() +
