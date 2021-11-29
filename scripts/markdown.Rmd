@@ -103,7 +103,7 @@ dat <- dat %>%
    nationality == "Austrian" ~ "Austrian",
    nationality == "Greek" ~ "Greek",
    nationality == "Mexican" ~ "Mexican",
-   nationality == "Sweden" ~ "Sweedish",
+   nationality == "Sweden" ~ "Swedish",
    nationality == "Turkish" ~ "Turkish",
    nationality == "Slovenian" ~ "Slovenian",
    nationality == "Guyanese" ~ "Guyanese",
@@ -180,6 +180,19 @@ dat %>%
        digits = 2,
        booktabs = TRUE) %>%
  kable_styling()
+
+# Trying pivot wider
+dat_class_tidy <- dat %>% 
+   filter(category == "Passenger") %>% 
+   filter(!is.na(nationality2)) %>% 
+   group_by(class, nationality2) %>% 
+   summarize(count = n()) %>% 
+   mutate(percent = (count/sum(count))*100) %>% 
+   arrange(class, desc(percent)) %>%
+ pivot_wider(
+  names_from = class,
+  values_from = class
+ ) 
 
 # PEER Review MV: Here, I think another good opportunity to visualize tables that intersect Nationality and class. I think you are able to more easily see variation in nationality by class. Interesting how Americans were concentrated in first class, and third class varied much more.
 # dat %>% 
