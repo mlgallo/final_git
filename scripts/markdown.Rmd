@@ -9,10 +9,7 @@ output:
 bibliography: references.bib
 ---
 
-The packages used in this project are:
-Rio: @riopackage
-Readr: @readrpackage
-Haven: @havenpackage
+For this project, we used several packages. These included Rio  @riopackage, Readr @readrpackage, Haven @havenpackage, Here, Tidyverse, Janitor, Plotly, Ggridges, Party, Kableextra, Tinytex
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
@@ -284,7 +281,7 @@ surv_classhist <- dat %>%
    theme_minimal() +
    theme(plot.title = element_text(hjust = 0.5))
 
-surv_classhist + scale_fill_manual(name = "Survival", values = c("black","dark red"))
+surv_classhist + scale_fill_manual(name = "Survival", values = c("blue","grey"))
 
 surv_agehist <- dat %>% 
    ggplot(aes(age, gender)) +
@@ -294,7 +291,7 @@ surv_agehist <- dat %>%
    theme_minimal() +
    theme(plot.title = element_text(hjust = 0.5))
 
-surv_agehist + scale_fill_manual(name = "Survival", values = c("black","dark red"))
+surv_agehist + scale_fill_manual(name = "Survival", values = c("blue","grey"))
 
 surv_ageclass_hist <- dat %>% 
    ggplot(aes(age, gender)) +
@@ -305,7 +302,7 @@ surv_ageclass_hist <- dat %>%
    theme_minimal() +
    theme(plot.title = element_text(hjust = 0.5))
 
-surv_ageclass_hist + scale_fill_manual(name = "Survival", values = c("black","dark red"))
+surv_ageclass_hist + scale_fill_manual(name = "Survival", values = c("blue","grey"))
 
 ```
 
