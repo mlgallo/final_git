@@ -128,7 +128,7 @@ dat %>%
        col.names = c("Class", "Count", "Percent"),
        digits = 2,
        booktabs = TRUE) %>%
-   kable_styling()
+ kable_classic(full_width = F, html_font = "Cambria")
    
 # Breakdown of passengers by class and gender
 dat %>% 
@@ -139,7 +139,7 @@ dat %>%
        col.names = c("Class", "Gender", "Count", "Percent"),
        digits = 2,
        booktabs = TRUE) %>%
-   kable_styling()
+ kable_classic(full_width = F, html_font = "Cambria")
 
 # Breakdown of passenger nationalities
 dat %>% 
@@ -190,8 +190,8 @@ dat_class_tidy <- dat %>%
    mutate(percent = (count/sum(count))*100) %>% 
    arrange(class, desc(percent)) %>%
  pivot_wider(
-  names_from = class,
-  values_from = class
+  names_from = "class",
+  values_from = "class"
  ) %>%
  kable(caption = "Breakdown of Passenger Nationalities by Class (Wider)",
        col.names = c("Nationality", "Count", "Percent", "1st Class", "2nd Class", "3rd Class"),
