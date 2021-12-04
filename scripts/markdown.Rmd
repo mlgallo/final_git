@@ -193,7 +193,11 @@ dat_class_tidy <- dat %>%
   names_from = class,
   values_from = class
  ) %>%
- kable()
+ kable(caption = "Breakdown of Passenger Nationalities by Class (Wider)",
+       col.names = c("Nationality", "Count", "Percent", "1st Class", "2nd Class", "3rd Class"),
+       digits = 2,
+       booktabs = TRUE) %>%
+ kable_styling
 
 dat_class_tidy
 
