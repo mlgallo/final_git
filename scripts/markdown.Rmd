@@ -124,7 +124,7 @@ dat %>%
    summarize(count = n()) %>% 
    mutate(percent = (count/sum(count))*100) %>% 
    adorn_totals() %>%
-   kable(caption = "Breakdown of Passengers by Class and Gender",
+   kable(caption = "Breakdown of Passengers by Class",
        col.names = c("Class", "Count", "Percent"),
        digits = 2,
        booktabs = TRUE) %>%
@@ -192,7 +192,10 @@ dat_class_tidy <- dat %>%
  pivot_wider(
   names_from = class,
   values_from = class
- ) 
+ ) %>%
+ kable()
+
+dat_class_tidy
 
 # PEER Review MV: Here, I think another good opportunity to visualize tables that intersect Nationality and class. I think you are able to more easily see variation in nationality by class. Interesting how Americans were concentrated in first class, and third class varied much more.
 # dat %>% 
