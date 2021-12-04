@@ -224,10 +224,10 @@ dat %>%
    summarize(avg_age = mean(age), std_age = sd(age), min_age = min(age), 
              max_age = max(age)) %>%
    kable(caption = "Average Age by Class",
-       col.names = c("Class", "Average Age", "SD Age", "Minimum Age", "Maximum Age"),
+       col.names = c("Class", "Average Age", "SD Age", "Min. Age", "Max. Age"),
        digits = 2,
        booktabs = TRUE) %>%
-   kable_styling()
+   kable_classic(full_width = F, html_font = "Cambria")
 
 
 
@@ -247,7 +247,7 @@ dat %>%
        col.names = c("Class", "Survived", "Count", "Percent"),
        digits = 2,
        booktabs = TRUE) %>%
-   kable_styling()
+   kable_classic(full_width = F, html_font = "Cambria")
 
 # Survival rate by gender
 dat %>% 
@@ -259,7 +259,7 @@ dat %>%
        col.names = c("Gender", "Survived", "Count", "Percent"),
        digits = 2,
        booktabs = TRUE) %>%
-   kable_styling()
+   kable_classic(full_width = F, html_font = "Cambria")
 
 # Survival rate by class and gender
 dat %>% 
@@ -271,7 +271,7 @@ dat %>%
        col.names = c("Class", "Gender", "Survived", "Count", "Percent"),
        digits = 2,
        booktabs = TRUE) %>%
-   kable_styling()
+   kable_classic(full_width = F, html_font = "Cambria")
 ```
 
 ### Density ridges
