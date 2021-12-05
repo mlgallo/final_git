@@ -3,7 +3,7 @@ title: "EDLD Final Project"
 author: "Lauren Berny, Adriana Conn, Mavis Gallo, Aubrey Green, Shawn McWeeney"
 output:
   html_document:
-    code_folding: show
+    code_folding: hide
     toc: true
     toc_float: true
 bibliography: references.bib
@@ -28,7 +28,7 @@ library(party)
 # Passengers Data
 
 ## Load data
-```{r}
+```{r, include = FALSE}
 dat <- import(here("data", "dat.csv")) %>% 
    filter(Category=="Passenger") %>% 
    clean_names() %>% 
@@ -37,7 +37,7 @@ dat <- import(here("data", "dat.csv")) %>%
 ```
 
 ## Clean data
-```{r}
+```{r, include = FALSE}
 dat$gender <- as.factor(dat$gender)
 dat$marital_status <- as.factor(dat$marital_status)
 dat$category <- as.factor(dat$category)
@@ -45,16 +45,8 @@ dat$class <- as.factor(dat$class)
 dat$survived <- as.factor(dat$survived)
 dat$embarked <- as.factor(dat$embarked)
 dat$disembarked  <- as.factor(dat$disembarked)
+dat$boat <- as.factor(dat$boat)
 
-# # PEER Review MV: You could consider using dplyr to recode these new variables and then also creating factors that make more sense for some of the variables that have multiple variables. For example, numbering factors based on frequency for marital status. This probably isn't very helpful but a little cleaner than code above.
-# dat <- dat %>%
-#    mutate(gender = as.factor(gender),
-#           marital_status = fct_infreq(marital_status),
-#           category = as.factor(category),
-#           class = as.factor(class),
-#           survived = as.factor(survived),
-#           embarked = as.factor(embarked),
-#           disembarked = as.factor(disembarked))
 
 dat <- dat %>% 
  mutate(nationality2 = case_when(nationality == "English" ~ "English",
@@ -107,17 +99,13 @@ dat <- dat %>%
    nationality == "Unknown" ~ "Unknown",
    TRUE ~ "Other - Multiple", ))
 
-## PEER Review MV: For Nationality, Consider creating a more collapsed factor variable that only has those nationalities with 10 or more individuals and then an other category. Then you could potentially create a cleaner bar graph. Added some code below
-# dat <- dat %>%
-#    mutate(nationality_cat = fct_lump_min(nationality,10),
-#           nationality_cat = fct_infreq(nationality_cat))
 
 dat <- dat %>% 
    mutate(nationality2 = ifelse(nationality2 == "Unknown", NA, nationality2))
 ```
 
 ## Descriptives
-```{r, descriptives, results = "asis"}
+```{r, descriptives, results = "asis", include = FALSE}
 # Breakdown of passengers by class
 dat %>% 
    group_by(class) %>% 
@@ -180,26 +168,6 @@ dat %>%
        digits = 2,
        booktabs = TRUE) %>%
    kable_styling(fixed_thead = T, full_width = F, html_font = "Cambria", bootstrap_options = c("striped", "hover"))
-
-# Trying pivot wider
-dat_class_tidy <- dat %>% 
-   filter(category == "Passenger") %>% 
-   filter(!is.na(nationality2)) %>% 
-   group_by(class, nationality2) %>% 
-   summarize(count = n()) %>% 
-   mutate(percent = (count/sum(count))*100) %>% 
-   arrange(class, desc(percent)) %>%
- pivot_wider(
-  names_from = "class",
-  values_from = "class"
- ) %>%
- kable(caption = "Breakdown of Passenger Nationalities by Class (Wider)",
-       col.names = c("Nationality", "Count", "Percent", "1st Class", "2nd Class", "3rd Class"),
-       digits = 2,
-       booktabs = TRUE) %>%
- kable_styling(fixed_thead = T, full_width = F, html_font = "Cambria", bootstrap_options = c("striped", "hover"))
-
-dat_class_tidy
 
 # PEER Review MV: Here, I think another good opportunity to visualize tables that intersect Nationality and class. I think you are able to more easily see variation in nationality by class. Interesting how Americans were concentrated in first class, and third class varied much more.
 # dat %>% 
@@ -394,7 +362,10 @@ fares_tidy <- fares %>%
    names_to = "year",
    names_prefix = "fare_",
    values_to = "price", names_transform = list(year = as.integer))
+
 ```
+
+
 
 ## Inflation-adjustment plot
 ```{r fig.width=8, fig.height=8}
