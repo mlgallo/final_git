@@ -1,0 +1,377 @@
+---
+title: "Revisiting the Titanic"
+author: "Lauren Berny, Adriana Conn, Mavis Gallo, Aubrey Green"
+output:
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_float: true
+bibliography: references.bib
+---
+
+The packages used in this project are:
+Rio: @riopackage
+Readr: @readrpackage
+Haven: @havenpackage
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+
+library(rio)
+library(readr)
+library(haven)
+library(here)
+library(tidyverse)
+library(janitor)
+library(plotly)
+library(ggridges)
+library(party)
+library(kableExtra)
+library(tinytex)
+library(gtsummary)
+```
+
+```{r include = FALSE}
+# Passengers Data & Cleaning
+dat <- import(here("data", "dat.csv")) %>% 
+   filter(Category=="Passenger") %>% 
+   clean_names() %>% 
+   mutate_all(na_if,"") %>% 
+   drop_na(survived, gender, class, age)
+
+dat$gender <- as.factor(dat$gender)
+dat$marital_status <- as.factor(dat$marital_status)
+dat$category <- as.factor(dat$category)
+dat$class <- as.factor(dat$class)
+dat$survived <- as.factor(dat$survived)
+dat$embarked <- as.factor(dat$embarked)
+dat$disembarked  <- as.factor(dat$disembarked)
+
+dat <- dat %>% 
+ mutate(nationality2 = case_when(nationality == "English" ~ "English",
+   nationality == "Irish" ~ "Irish",
+   nationality == "American" ~ "American",
+   nationality == "Swedish" ~ "Swedish",
+   nationality == "Finnish" ~ "Finnish",
+   nationality == "Scottish" ~ "Scottish",
+   nationality == "French" ~ "French",
+   nationality == "Italian" ~ "Italian",
+   nationality == "Canadian" ~ "Canadian",
+   nationality == "Bulgarian" ~ "Bulgarian",
+   nationality == "Croatian" ~ "Croatian",
+   nationality == "Belgian" ~ "Belgian",
+   nationality == "Norwegian" ~ "Norwegian",
+   nationality == "Channel Islander" ~ "Channel Islander",
+   nationality == "Welsh" ~ "Welsh",
+   nationality == "Swiss" ~ "Swiss",
+   nationality == "German" ~ "German",
+   nationality == "Danish" ~ "Danish",
+   nationality == "Spanish" ~ "Spanish",
+   nationality == "Australian" ~ "Australian",
+   nationality == "Polish" ~ "Polish",
+   nationality == "South African" ~ "South African",
+   nationality == "Bosnian" ~ "Bosnian",
+   nationality == "Hong Kongese" ~ "Hong Kongese",
+   nationality == "Dutch" ~ "Dutch",
+   nationality == "Lithuanian" ~ "Lithuanian",
+   nationality == "Greek" ~ "Greek",
+   nationality == "Portuguese" ~ "Portuguese",
+   nationality == "Uruguayan" ~ "Uruguayan",
+   nationality == "Chinese" ~ "Chinese",
+   nationality == "Slovenian" ~ "Slovenian",
+   nationality == "Cape Verdean" ~ "Cape Verdean",
+   nationality == "Egyptian" ~ "Egyptian",
+   nationality == "Japanese" ~ "Japanese",
+   nationality == "Hungarian" ~ "Hungarian",
+   nationality == "Bosnian" ~ "Bosnian",
+   nationality == "Hong Kongese" ~ "Hong Kongese",
+   nationality == "Latvian" ~ "Latvian",
+   nationality == "Austrian" ~ "Austrian",
+   nationality == "Greek" ~ "Greek",
+   nationality == "Mexican" ~ "Mexican",
+   nationality == "Sweden" ~ "Swedish",
+   nationality == "Turkish" ~ "Turkish",
+   nationality == "Slovenian" ~ "Slovenian",
+   nationality == "Guyanese" ~ "Guyanese",
+   nationality == "Haitian" ~ "Haitian",
+   nationality == "Syrian,Lebanese" ~ "Syrian/Lebanese",
+   nationality == "Unknown" ~ "Unknown",
+   TRUE ~ "Other - Multiple", ))
+
+dat <- dat %>% 
+   mutate(nationality2 = ifelse(nationality2 == "Unknown", NA, nationality2))
+```
+
+
+```{r include=FALSE}
+## Load data
+fares <- import(here("data", "avgfare.csv")) %>% 
+   clean_names()
+
+fares$accommodation <- as.factor(fares$accommodation)
+fares$accommodation <- factor(fares$accommodation, levels = c("First-class parlor suite", "First-class cabin", "Second-class cabin", "Third-class cabin"))
+
+# Calculate inflation
+p1921 <- (17.9/9.7)
+fares$fare_1921 <- p1921*fares$fare_1912
+fares$fare_1921 <- round(fares$fare_1921, 2)
+
+p1931 <- (15.2/9.7)
+fares$fare_1931 <- p1931*fares$fare_1912
+fares$fare_1931 <- round(fares$fare_1931, 2)
+
+p1941 <- (14.7/9.7)
+fares$fare_1941 <- p1941*fares$fare_1912
+fares$fare_1941 <- round(fares$fare_1941, 2)
+
+p1951 <- (26.0/9.7)
+fares$fare_1951 <- p1951*fares$fare_1912
+fares$fare_1951 <- round(fares$fare_1951, 2)
+
+p1961 <- (29.9/9.7)
+fares$fare_1961 <- p1961*fares$fare_1912
+fares$fare_1961 <- round(fares$fare_1961, 2)
+
+p1971 <- (40.5/9.7)
+fares$fare_1971 <- p1971*fares$fare_1912
+fares$fare_1971 <- round(fares$fare_1971, 2)
+
+p1981 <- (90.9/9.7)
+fares$fare_1981 <- p1981*fares$fare_1912
+fares$fare_1981 <- round(fares$fare_1981, 2)
+
+p1991 <- (136.2/9.7)
+fares$fare_1991 <- p1991*fares$fare_1912
+fares$fare_1991 <- round(fares$fare_1991, 2)
+
+p2001 <- (177.1/9.7)
+fares$fare_2001 <- p2001*fares$fare_1912
+fares$fare_2001 <- round(fares$fare_2001, 2)
+
+p2011 <- (224.9/9.7)
+fares$fare_2011 <- p2011*fares$fare_1912
+fares$fare_2011 <- round(fares$fare_2011, 2)
+
+p2021 <- (274.3/9.7)
+fares$fare_2021 <- p2021*fares$fare_1912
+fares$fare_2021 <- round(fares$fare_2021, 2)
+
+fares_tidy <- fares %>%
+   pivot_longer(cols = starts_with("fare"),
+   names_to = "year",
+   names_prefix = "fare_",
+   values_to = "price", names_transform = list(year = as.integer))
+
+## Inflation-adjustment plot
+fare_graph <- fares_tidy %>% 
+   ggplot(aes(year, price, colour=accommodation)) +
+   geom_line() +
+   geom_point() +
+   scale_colour_brewer(palette="Spectral") +
+   facet_wrap(~ accommodation, 4, scales = "free") +
+   xlim(1912,2021) +
+   theme(panel.spacing = unit(1, "lines")) +
+   labs(y = "Price ($USD)", x = "Year", title = "Inflation-Adjusted Titanic Ticket Prices",
+        subtitle = "From 1912 to 2021", colour = "Accommodation") +
+   theme_minimal()
+```
+
+# Abstract
+On April 14th, 1912, on its maiden voyage, the Titanic struck an iceberg. Two hours and 40 minutes later, approximately 62% of the passengers perished. Prior research has attempted to determine the characteristics of those who survived the sinking of the Titanic compared to those who died in order to better which attributes were prioritized for determining a life and death situation during that era. The purpose of this study is to further explore the most popular characteristics--class, gender, and age--using descriptive statistics, data visualization, and predictive models (e.g., logistic regression and conditional inference classification trees). Logistic regression results indicate that all three demographic attributes are significant predictors of survival. However, classification tree results suggest that gender had the largest effect on survival, followed subsequently by class. Interestingly, age was only a significant differentiating attribute between males.
+
+# Introduction
+**Work in brief statement about class system, passengers, and voyage.**
+```{r}
+dat %>% 
+   group_by(class) %>% 
+   summarize(count = n()) %>% 
+   mutate(percent = (count/sum(count))*100) %>% 
+   adorn_totals() %>%
+   kable(caption = "Breakdown of Passengers by Class",
+       col.names = c("Class", "Count", "Percent"),
+       digits = 2,
+       booktabs = TRUE) %>%
+   kable_styling()
+```
+The Titanic was a British cruise liner that featured the most advanced technology available in 1912 but collided with an iceberg just before midnight and sank in the 2-degree Celsius North Atlantic Ocean on its maiden voyage and killed over two-thirds of the passengers and crew onboard (Balakumar et al., 2019; Frey et al., 2011; Hall, 1986). There are many documented factors that contributed to so many of the passengers and crew perishing on the Titanic. There were not enough lifeboats on board. The Titanic included twenty lifeboats which was only enough room for 52% of passengers on board at that time (Frey et al., 2011; Hall, 1986; Symanzik et al., 2019) and a portion of lifeboats launched were not full (Frey et al., 2011; Symanzik et al., 2019). Those who did not get a seat in a lifeboat were sure to perish due to the frigid ocean temperature (Hall, 1986; Frey et al., 2011) and the lower probability of being saved as it’s reported that partially full lifeboats that were lowered made no attempt to save people from the water (Hall, 1986). In addition to the media created based on the Titanic disaster, there have also been datasets released which provide information about the passengers and crew on the Titanic including their sex, age, nationality, ticket fare, social class, ticket number, passenger or crewmember status, parent status, sibling status, spouse status, and port of embarkation (Balakumar et al., 2019). This has enabled researchers to determine who was on the Titanic and whether any of these variables were significant predictors of survival or death. 
+
+The Titanic took approximately two hours and forty minutes to sink to the bottom of the ocean which is a lengthier amount of time compared to some other maritime disasters such as the Lusitania which took only about 18 minutes to sink to the bottom of the ocean after being struck by a torpedo (Frey et al., 2011). It has been hypothesized that this longer amount of time between the Titanic being struck and sinking completely left room for social patterns to operate rather than more selfish interests as in the Lusitania where passengers may have felt more of a fight-or-flight response to more imminent danger (Frey et al., 2011). For example, evacuating women and children before men was a social norm and code of conduct in 1912 (Farag & Hassan, 2018). It has also been documented that Captain Edward Smith had shouted, “Women and children first” after the Titanic collided with the iceberg (Farag & Hassan, 2018). This length of time may have also given an advantage to the first-class passengers compared to the second- and third-class passengers, and to the second-class passengers compared to the third-class passengers, due to a higher likelihood of these passengers giving commands and the crewmembers listening, as well as their financial means to bargain with crewmembers (Frey et al., 2011). 
+**NOTE: Wealth Gap here - Inline text now optional**
+```{r echo=FALSE, include=FALSE}
+firstavg1912 <- "$150.00"
+firstavg2021 <- "$4,241.74"
+```
+As shown in the graph below, ehen taking inflation rates into consideration, we see that the average price for a first-class cabin in 1912 was **`r firstavg1912`**, which today would be **`r firstavg2021`**...
+```{r fig.width=10, fig.height=8}
+ggplotly(fare_graph)
+```
+Frey et al. (2011) explain that lifeboats were stored closest to the first-class cabins, first-class passengers had more access to information about the disaster, and they were more likely to have a relationship with the officers who gave orders for loading lifeboats, all of which may have given first-class passengers an advantage in survival. Because the Titanic was perceived to be a British ship, it may have been the case that British passengers were favored by crewmembers on the Titanic and had a greater chance of survival compared to passengers who were not British.
+
+## Research Questions
+1. What were the characteristics of the passengers of the Titanic who survived or perished?  
+2. Were passengers' class, gender, and age significant predictors of survival?
+3. Which of the three demographic characteristics had the greatest influence on survival?
+
+# Methods
+## Analytic Sample
+Since the population of interest for this study is passengers who were aboard the Titanic during its sinking, passengers who disembarked at Cherbourg, Queenstown, and Southampton (*n* = 35) as well as crew members were excluded from the analyses. Missing data was handled through listwise deletion of two participants who did not have their ages recorded. Thus, the analytic sample consisted of 1,315 passengers. The table below shows a breakdown of the analytic sample by class affiliation and gender.
+```{r}
+dat %>% 
+   group_by(class) %>% 
+   summarize(count = n()) %>% 
+   mutate(percent = (count/sum(count))*100) %>% 
+   adorn_totals() %>%
+   kable(caption = "Breakdown of Passengers by Class",
+       col.names = c("Class", "Count", "Percent"),
+       digits = 2,
+       booktabs = TRUE) %>%
+   kable_styling()
+```
+Participant ages ranged from 0-74 years (*M* = 31.42, *SD* = 13.92). The table below shown the distribution of ages by each class. The average age in first-class was substantially older than both second and third-class. This may suggest that the trip served a different purpose for that group of passengers, such as recreation and experience versus business travels and immigration (Hall, 1986).
+```{r}
+dat %>% 
+   group_by(class) %>% 
+   summarize(avg_age = mean(age), std_age = sd(age), min_age = min(age), 
+             max_age = max(age)) %>%
+   kable(caption = "Average Age by Class",
+       col.names = c("Class", "Average Age", "SD Age", "Minimum Age", "Maximum Age"),
+       digits = 2,
+       booktabs = TRUE) %>%
+   kable_styling()
+```
+The table below shows the list of nationalities reported by the Titanic's passengers. The majority of the passengers where English (22.43%), American (18.40%), and Irish (9.28%). The majority of first-class passengers were American (60.19%), whereas the majority of second-class passengers were English (51.06%). Third class passengers were the most diverse class, with the most popular nationalities being English (15.84%), Irish (14.85%), Swedish	(12.73%), and Syrian/Lebanese	(11.74%). The difference in nationalities were likely due to the large number of individuals in third-class who were immigrating to American (Hall, 1986).
+```{r}
+dat %>% 
+   filter(!is.na(nationality2)) %>% 
+   group_by(nationality2) %>% 
+   summarize(count = n()) %>% 
+   mutate(percent = (count/sum(count))*100) %>% 
+   arrange(desc(percent)) %>%
+   kable(caption = "Breakdown of Passenger Nationalities",
+       col.names = c("Nationality", "Count", "Percent"),
+       digits = 2,
+       booktabs = TRUE) %>%
+   kable_styling("hover")
+```
+
+## Measures
+### Dependent Variable
+The primary outcome of interest was survival status, which was recorded as a dichotomous factor variable (lost or survived).
+
+### Independent Variables
+Independent variables included class (which serves as a proxy for socioeconomic status), gender, and age. Class was recorded as a three-level factor variable (first-class, second-class, and third-class), whereas gender was recorded as a dichotomous factor variable (female or male). Age (in years) was recorded as a continuous variable.
+
+## Analysis
+Data analysis was performed using RStudio: Integrated Development Environment for R (RStudio Team, 2021) version 4.1.1. Descriptive statistics were computed to describe the analytic sample as well as compare survival rates across demographic subgroups of interest. Density ridges were graphed in order to visualize survival rate differences for gender and class subgroups across age ranges. Next, a logistic regression model was estimated to examine whether the main effects of gender (reference group = female), class (reference group = first-class), and age were significant predictors of surviving the disaster. To assess how these groups interact to influence survival as well which variable was the most influential, a conditional classification tree  was estimated. Conditional classification trees combine recursive partitioning and statistical inference. This type of classification tree uses a splitting criteria based on Bonferroni-corrected statistical significance testing, which minimizes biases often associated with traditional classification trees (Hothorn et al., 2006). Alpha was set at .95 for all multivariate analyses.
+
+# Results
+
+## Descriptive Statistics of Survival
+**OVERALL...**
+```{r}
+dat %>% 
+   group_by(survived) %>% 
+   summarize(count = n()) %>% 
+   mutate(percent = (count/sum(count))*100) %>% 
+   adorn_totals() %>%
+   kable(caption = "Overall Survival Outcomes",
+       col.names = c("Outcomes", "Count", "Percent"),
+       digits = 2,
+       booktabs = TRUE) %>%
+   kable_styling()
+```
+When examining the descriptive statistics broken down by class and gender, there are substantial disparities in survival. as shown in the table below, approximately 62% of first-class passengers survived, compared to 41.55% of second-class passengers and 74.47% of third-class passengers.
+```{r}
+dat %>% 
+   group_by(class, survived) %>% 
+   summarize(count = n()) %>% 
+   mutate(percent = (count/sum(count))*100) %>% 
+   arrange(class, survived) %>%
+   kable(caption = "Survival Rate by Class",
+       col.names = c("Class", "Survived", "Count", "Percent"),
+       digits = 2,
+       booktabs = TRUE) %>%
+   kable_styling()
+```
+As shown in the table below, 72.75% of female passengers survived compared to 18.96% of male passengers.
+```{r}
+dat %>% 
+ group_by(gender, survived) %>% 
+ summarize(count = n()) %>% 
+ mutate(percent = (count/sum(count))*100) %>% 
+ arrange(gender, survived) %>%
+ kable(caption = "Survival Rate by Gender",
+       col.names = c("Gender", "Survived", "Count", "Percent"),
+       digits = 2,
+       booktabs = TRUE) %>%
+ kable_styling()
+```
+The table below shows Examining survival rates broken down by both class and gender. Only five female first-class female passengers lost their lives while 96.53% survived. 65.56% of first-class male passengers lost their lives while 34.44% survived. Among second-class female passengers, 11.32% perished and 88.68% survived. For second-class male passengers, 86.52% perished and 13.48% survived. 50.93% of third-class female passengers lost their lives while 49.07% survived. 84.79% of third-class male passengers lost their lives while 15.21% survived. These differences in rates highlight how class and gender may interact to predict survival.
+```{r}
+dat %>% 
+   group_by(class, gender, survived) %>% 
+   summarize(count = n()) %>% 
+   mutate(percent = (count/sum(count))*100) %>% 
+   arrange(class, gender) %>%
+   kable(caption = "Survival Rate by Class and Gender",
+       col.names = c("Class", "Gender", "Survived", "Count", "Percent"),
+       digits = 2,
+       booktabs = TRUE) %>%
+   kable_styling("hover")
+```
+Furthermore, age was also an important factor that contributed to survival. As shown in the figure below, age...**Something here**
+```{r include=FALSE, warnings=FALSE, message=FALSE}
+surv_ageclass_hist <- dat %>% 
+   ggplot(aes(age, gender)) +
+   facet_wrap(~class, nrow=3) +
+   geom_density_ridges(aes(fill = factor(survived))) +
+   labs(title = "Age Distribution of Survival Status By Class and Gender", 
+   x = "Age Distribution", y = "Passenger Gender") +
+   theme_minimal() +
+   theme(plot.title = element_text(hjust = 0.5))
+
+surv_ageclass_hist <- surv_ageclass_hist + scale_fill_manual(name = "Survival", values = c("black","dark red"))
+```
+
+```{r fig.width=8, fig.height=6}
+surv_ageclass_hist
+```
+
+```{r include = FALSE}
+modeldat <- dat %>% 
+   select(survived, gender, class, age)
+m1 <- glm(survived ~ age + gender + class, modeldat, family = binomial)
+summary(m1)
+tbl_m1 <- tbl_regression(m1, exponentiate = TRUE, intercept=FALSE)
+```
+
+## Logistic Regression Model
+Results of the main effects logistic regression model predicting survival are shown in the table below. When controlling for the effects of gender and class, age was a significant predictor of survival `r inline_text(tbl_m1, variable = age, pattern = "(OR {estimate}; 95% CI {conf.low}, {conf.high}; {p.value})")`. With each additional year in age, passengers' odds of survival decreased by three percent. When controlling for the effects of age and gender, class affiliation was a significant predictor of survival `r inline_text(tbl_m1, variable = class, pattern = "(OR {estimate}; 95% CI {conf.low}, {conf.high}; {p.value})")`. Compared to first-class passengers, second-class passengers' and third-class passengers' odds of surviving the disaster were 73% lower and 90% lower, respectively. Gender was also a significant predictor of survival `r inline_text(tbl_m1, variable = gender, pattern = "(OR {estimate}; 95% CI {conf.low}, {conf.high}; {p.value})")`, even when controlling for class and age. Male passengers faced 92% lower odds of survival compared to female passengers. Taken together, these results confirm that--even when controlling for one another--class, age, and gender significantly affected survival rates.
+```{r}
+tbl_m1
+```
+
+## Classification Tree
+The figure below shows the results of the conditional classification tree used to model survival. The tree's terminal nodes identified the following eight subgroups:
+1. First class females
+2. Second class females
+3. Third class females
+4. First class males, 54 years of age or younger
+5. First class males, older than 54 years of age
+6. Second class males, nine years of age or younger
+7. Third class males, nine years of age or younger
+8. Second and third-class males, older than nine years of age
+The terminal nodes' barplots indicate the breakdown of survival for each subgroup (black = survival, gray = loss of life). Each gender was stratified by class, suggesting that class was an important predictor of survival for both males and females. However, class had much smaller effect in women (*p* = .044) than men (*p* <.001). Female subgroups were not split by age, whereas all male subgroups were split by age following class, which indicates that age had a larger effect among males than females. Furthermore, the age split for first-class males (54 years of age) is substantially larger than the age split among second and third-class males (nine years of age), which aligns with the wider age distribution of first-class males previously observed in the density ridge graphs. Interestingly, second and third-class males over the age of nine were not split by class. When examining the model as a whole, the base node was gender (*p* < .001), suggesting it was the greatest predictor of survival entered into the model. Thus, based on these order of the tree splits, one can hypothesize that gender was the largest predictor of survival, followed by class and age, respectively.
+```{r include=FALSE}
+library(party)  
+ctree <- ctree(survived~., data=modeldat)
+```
+
+```{r, fig.width=12, fig.height=9.25}
+plot(ctree, main = "Predicting Survival From Gender, Class, and Age")
+```
+
+# Discussion
+**NEEDS FINISHED**
+
+# References
