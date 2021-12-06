@@ -191,7 +191,7 @@ dat %>%
        col.names = c("Class", "Count", "Percent"),
        digits = 2,
        booktabs = TRUE) %>%
-   kable_styling()
+  kable_classic(full_width = F, html_font = "Cambria")
 ```
 The Titanic was a British cruise liner that featured the most advanced technology available in 1912 but collided with an iceberg just before midnight and sank in the 2-degree Celsius North Atlantic Ocean on its maiden voyage and killed over two-thirds of the passengers and crew onboard (Balakumar et al., 2019; Frey et al., 2011; Hall, 1986). There are many documented factors that contributed to so many of the passengers and crew perishing on the Titanic. There were not enough lifeboats on board. The Titanic included twenty lifeboats which was only enough room for 52% of passengers on board at that time (Frey et al., 2011; Hall, 1986; Symanzik et al., 2019) and a portion of lifeboats launched were not full (Frey et al., 2011; Symanzik et al., 2019). Those who did not get a seat in a lifeboat were sure to perish due to the frigid ocean temperature (Hall, 1986; Frey et al., 2011) and the lower probability of being saved as it’s reported that partially full lifeboats that were lowered made no attempt to save people from the water (Hall, 1986). In addition to the media created based on the Titanic disaster, there have also been datasets released which provide information about the passengers and crew on the Titanic including their sex, age, nationality, ticket fare, social class, ticket number, passenger or crewmember status, parent status, sibling status, spouse status, and port of embarkation (Balakumar et al., 2019). This has enabled researchers to determine who was on the Titanic and whether any of these variables were significant predictors of survival or death. 
 
@@ -225,7 +225,7 @@ dat %>%
        col.names = c("Class", "Count", "Percent"),
        digits = 2,
        booktabs = TRUE) %>%
-   kable_styling()
+  kable_classic(full_width = F, html_font = "Cambria")
 ```
 Participant ages ranged from 0-74 years (*M* = 31.42, *SD* = 13.92). The table below shown the distribution of ages by each class. The average age in first-class was substantially older than both second and third-class. This may suggest that the trip served a different purpose for that group of passengers, such as recreation and experience versus business travels and immigration (Hall, 1986).
 ```{r}
@@ -234,10 +234,10 @@ dat %>%
    summarize(avg_age = mean(age), std_age = sd(age), min_age = min(age), 
              max_age = max(age)) %>%
    kable(caption = "Average Age by Class",
-       col.names = c("Class", "Average Age", "SD Age", "Minimum Age", "Maximum Age"),
+       col.names = c("Class", "Average Age", "SD Age", "Min. Age", "Max. Age"),
        digits = 2,
        booktabs = TRUE) %>%
-   kable_styling()
+  kable_classic(full_width = F, html_font = "Cambria")
 ```
 The table below shows the list of nationalities reported by the Titanic's passengers. The majority of the passengers where English (22.43%), American (18.40%), and Irish (9.28%). The majority of first-class passengers were American (60.19%), whereas the majority of second-class passengers were English (51.06%). Third class passengers were the most diverse class, with the most popular nationalities being English (15.84%), Irish (14.85%), Swedish	(12.73%), and Syrian/Lebanese	(11.74%). The difference in nationalities were likely due to the large number of individuals in third-class who were immigrating to American (Hall, 1986).
 ```{r}
@@ -251,7 +251,7 @@ dat %>%
        col.names = c("Nationality", "Count", "Percent"),
        digits = 2,
        booktabs = TRUE) %>%
-   kable_styling("hover")
+   kable_styling(fixed_thead = T, full_width = F, html_font = "Cambria", bootstrap_options = c("striped", "hover"))
 ```
 
 ## Measures
@@ -278,7 +278,7 @@ dat %>%
        col.names = c("Outcomes", "Count", "Percent"),
        digits = 2,
        booktabs = TRUE) %>%
-   kable_styling()
+ kable_classic(full_width = F, html_font = "Cambria")
 ```
 When examining the descriptive statistics broken down by class and gender, there are substantial disparities in survival. as shown in the table below, approximately 62% of first-class passengers survived, compared to 41.55% of second-class passengers and 74.47% of third-class passengers.
 ```{r}
@@ -291,7 +291,7 @@ dat %>%
        col.names = c("Class", "Survived", "Count", "Percent"),
        digits = 2,
        booktabs = TRUE) %>%
-   kable_styling()
+ kable_classic(full_width = F, html_font = "Cambria")
 ```
 As shown in the table below, 72.75% of female passengers survived compared to 18.96% of male passengers.
 ```{r}
@@ -304,7 +304,7 @@ dat %>%
        col.names = c("Gender", "Survived", "Count", "Percent"),
        digits = 2,
        booktabs = TRUE) %>%
- kable_styling()
+  kable_classic(full_width = F, html_font = "Cambria")
 ```
 The table below shows Examining survival rates broken down by both class and gender. Only five female first-class female passengers lost their lives while 96.53% survived. 65.56% of first-class male passengers lost their lives while 34.44% survived. Among second-class female passengers, 11.32% perished and 88.68% survived. For second-class male passengers, 86.52% perished and 13.48% survived. 50.93% of third-class female passengers lost their lives while 49.07% survived. 84.79% of third-class male passengers lost their lives while 15.21% survived. These differences in rates highlight how class and gender may interact to predict survival.
 ```{r}
@@ -317,7 +317,7 @@ dat %>%
        col.names = c("Class", "Gender", "Survived", "Count", "Percent"),
        digits = 2,
        booktabs = TRUE) %>%
-   kable_styling("hover")
+ kable_classic(full_width = F, html_font = "Cambria")
 ```
 Furthermore, age was also an important factor that contributed to survival. As shown in the figure below, age...**Something here**
 ```{r include=FALSE, warnings=FALSE, message=FALSE}
