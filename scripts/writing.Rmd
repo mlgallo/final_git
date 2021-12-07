@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <<<<<<< 32a2141d524cc77bf759df83f950baff03b64f57
 ---
 title: "Revisiting the Titanic"
@@ -376,6 +377,8 @@ plot(ctree, main = "Predicting Survival From Gender, Class, and Age")
 **NEEDS FINISHED**
 
 =======
+=======
+>>>>>>> master
 ---
 title: "Revisiting the Titanic"
 author: "Lauren Berny, Adriana Conn, Mavis Gallo, Aubrey Green"
@@ -697,7 +700,11 @@ dat %>%
        booktabs = TRUE) %>%
  kable_classic(full_width = F, html_font = "Cambria")
 ```
+<<<<<<< HEAD
 Furthermore, age was an important factor among those who survived. The table below shows passenger age distributed across survival by gender and class. Males between the ages of 18-30 years old had the highest survival rates. Men between the ages of 5-18 had the worst survival rates. Women between the ages of 14-40 had the highest survival rates. A noteworthy finding is that infants had the highest rates of survival.First class passengers had the largest age distribution among those who survived, regardless of gender. Second class males had the lowest survival rates, followed by third class males. 
+=======
+Furthermore, age was an important factor among those who survived. The table below shows passenger age distributed across survival by gender and class. Males between the ages of 18-30 years old had the highest survival rates. Men between the ages of 5 and 18 had the worst survival rates. Women between the ages of 14 and 40 had the highest survival rates. A noteworthy finding is that infants had the highest rates of survival.First class passengers had the largest age distribution among those who survived, regardless of gender. Second class males had the lowest survival rates, followed by third class males. 
+>>>>>>> master
 ```{r include=FALSE, warnings=FALSE, message=FALSE}
 surv_ageclass_hist <- dat %>% 
    ggplot(aes(age, gender)) +
@@ -752,5 +759,8 @@ plot(ctree, main = "Predicting Survival From Gender, Class, and Age")
 # Discussion
 **NEEDS FINISHED**
 
+<<<<<<< HEAD
 >>>>>>> Mavis
+=======
+>>>>>>> master
 # References

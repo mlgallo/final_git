@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 ---
 title: "EDLD Final Project"
 author: "Lauren Berny, Adriana Conn, Mavis Gallo, Aubrey Green, Shawn McWeeney"
@@ -391,4 +392,411 @@ When taking inflation rates into consideration, we see that the average price fo
 
 For this project, we used several packages. These included Rio  @riopackage, Readr @readrpackage, Here @herepackage, Tidyverse @tidyversepackage, Janitor @janitorpackage, Plotly @plotlypackage, Kableextra @kableExtrapackage, Ggridges @ggridgespackage, and Party @partypackage
 
+=======
+---
+title: "EDLD Final Project"
+author: "Lauren Berny, Adriana Conn, Mavis Gallo, Aubrey Green, Shawn McWeeney"
+output:
+  html_document:
+    code_folding: show
+    toc: true
+    toc_float: true
+bibliography: references.bib
+---
+
+The packages used in this project are:
+Rio: @riopackage
+Readr: @readrpackage
+Haven: @havenpackage
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+
+library(rio)
+library(readr)
+library(haven)
+library(here)
+library(tidyverse)
+library(janitor)
+library(plotly)
+library(ggridges)
+library(party)
+library(kableExtra)
+library(tinytex)
+```
+
+# Passengers Data
+
+## Load data
+```{r}
+dat <- import(here("data", "dat.csv")) %>% 
+   filter(Category=="Passenger") %>% 
+   clean_names() %>% 
+   mutate_all(na_if,"") %>% 
+   drop_na(survived, gender, class, age)
+```
+
+## Clean data
+```{r}
+dat$gender <- as.factor(dat$gender)
+dat$marital_status <- as.factor(dat$marital_status)
+dat$category <- as.factor(dat$category)
+dat$class <- as.factor(dat$class)
+dat$survived <- as.factor(dat$survived)
+dat$embarked <- as.factor(dat$embarked)
+dat$disembarked  <- as.factor(dat$disembarked)
+
+dat <- dat %>%
+  mutate(gender = as.factor(gender),
+    marital_status = fct_infreq(marital_status),
+    category = as.factor(category),
+    class = as.factor(class),
+    survived = as.factor(survived),
+    embarked = as.factor(embarked),
+    disembarked = as.factor(disembarked))
+
+dat <- dat %>% 
+ mutate(nationality2 = case_when(nationality == "English" ~ "English",
+   nationality == "Irish" ~ "Irish",
+   nationality == "American" ~ "American",
+   nationality == "Swedish" ~ "Swedish",
+   nationality == "Finnish" ~ "Finnish",
+   nationality == "Scottish" ~ "Scottish",
+   nationality == "French" ~ "French",
+   nationality == "Italian" ~ "Italian",
+   nationality == "Canadian" ~ "Canadian",
+   nationality == "Bulgarian" ~ "Bulgarian",
+   nationality == "Croatian" ~ "Croatian",
+   nationality == "Belgian" ~ "Belgian",
+   nationality == "Norwegian" ~ "Norwegian",
+   nationality == "Channel Islander" ~ "Channel Islander",
+   nationality == "Welsh" ~ "Welsh",
+   nationality == "Swiss" ~ "Swiss",
+   nationality == "German" ~ "German",
+   nationality == "Danish" ~ "Danish",
+   nationality == "Spanish" ~ "Spanish",
+   nationality == "Australian" ~ "Australian",
+   nationality == "Polish" ~ "Polish",
+   nationality == "South African" ~ "South African",
+   nationality == "Bosnian" ~ "Bosnian",
+   nationality == "Hong Kongese" ~ "Hong Kongese",
+   nationality == "Dutch" ~ "Dutch",
+   nationality == "Lithuanian" ~ "Lithuanian",
+   nationality == "Greek" ~ "Greek",
+   nationality == "Portuguese" ~ "Portuguese",
+   nationality == "Uruguayan" ~ "Uruguayan",
+   nationality == "Chinese" ~ "Chinese",
+   nationality == "Slovenian" ~ "Slovenian",
+   nationality == "Cape Verdean" ~ "Cape Verdean",
+   nationality == "Egyptian" ~ "Egyptian",
+   nationality == "Japanese" ~ "Japanese",
+   nationality == "Hungarian" ~ "Hungarian",
+   nationality == "Bosnian" ~ "Bosnian",
+   nationality == "Hong Kongese" ~ "Hong Kongese",
+   nationality == "Latvian" ~ "Latvian",
+   nationality == "Austrian" ~ "Austrian",
+   nationality == "Greek" ~ "Greek",
+   nationality == "Mexican" ~ "Mexican",
+   nationality == "Sweden" ~ "Swedish",
+   nationality == "Turkish" ~ "Turkish",
+   nationality == "Slovenian" ~ "Slovenian",
+   nationality == "Guyanese" ~ "Guyanese",
+   nationality == "Haitian" ~ "Haitian",
+   nationality == "Syrian,Lebanese" ~ "Syrian/Lebanese",
+   nationality == "Unknown" ~ "Unknown",
+   TRUE ~ "Other - Multiple", ))
+
+
+dat <- dat %>%
+    mutate(nationality_cat = fct_lump_min(nationality,10),
+           nationality_cat = fct_infreq(nationality_cat))
+
+dat <- dat %>% 
+   mutate(nationality2 = ifelse(nationality2 == "Unknown", NA, nationality2))
+```
+
+## Descriptives
+```{r, descriptives, results = "asis"}
+# Breakdown of passengers by class
+dat %>% 
+   group_by(class) %>% 
+   summarize(count = n()) %>% 
+   mutate(percent = (count/sum(count))*100) %>% 
+   adorn_totals() %>%
+   kable(caption = "Breakdown of Passengers by Class and Gender",
+       col.names = c("Class", "Count", "Percent"),
+       digits = 2,
+       booktabs = TRUE) %>%
+   kable_styling()
+   
+# Breakdown of passengers by class and gender
+dat %>% 
+   group_by(class, gender) %>% 
+   summarize(count = n()) %>% 
+   mutate(percent = (count/sum(count))*100) %>%
+   kable(caption = "Breakdown of Passengers by Class and Gender",
+       col.names = c("Class", "Gender", "Count", "Percent"),
+       digits = 2,
+       booktabs = TRUE) %>%
+   kable_styling()
+
+# Breakdown of passenger nationalities
+dat %>% 
+   filter(!is.na(nationality2)) %>% 
+   group_by(nationality2) %>% 
+   summarize(count = n()) %>% 
+   mutate(percent = (count/sum(count))*100) %>% 
+   arrange(desc(percent)) %>%
+   kable(caption = "Breakdown of Passenger Nationalities",
+       col.names = c("Nationality", "Count", "Percent"),
+       digits = 2,
+       booktabs = TRUE) %>%
+   kable_styling()
+
+
+dat %>%
+  filter(!is.na(nationality2)) %>% 
+  group_by(nationality_cat) %>% 
+  summarize(count = n()) %>% 
+  mutate(percent = (count/sum(count))*100) %>% 
+  arrange((percent)) %>%
+  ggplot(aes(y = nationality_cat)) + 
+  geom_col(aes(x = percent), fill = "dark red") + 
+  geom_text(aes(x = percent, label=round(percent,2)), hjust = -.2, size = 3) +
+  theme_minimal() + 
+  labs(x = "Percentage of all passenges", y = "Nationality")
+
+# Breakdown of passenger nationalities by class (all)
+
+dat %>% 
+   filter(!is.na(nationality2)) %>% 
+   group_by(class, nationality2) %>% 
+   summarize(count = n()) %>% 
+   mutate(percent = (count/sum(count))*100) %>% 
+   arrange(class, desc(percent)) %>%
+   kable(caption = "Breakdown of Passenger Nationalities by Class (All)",
+       col.names = c("Class", "Nationality", "Count", "Percent"),
+       digits = 2,
+       booktabs = TRUE) %>%
+   kable_styling()
+
+# Trying pivot wider
+dat_class_tidy <- dat %>% 
+   filter(category == "Passenger") %>% 
+   filter(!is.na(nationality2)) %>% 
+   group_by(class, nationality2) %>% 
+   summarize(count = n()) %>% 
+   mutate(percent = (count/sum(count))*100) %>% 
+   arrange(class, desc(percent)) %>%
+ pivot_wider(
+  names_from = class,
+  values_from = class
+ ) 
+
+dat %>% 
+  filter(category == "Passenger") %>% 
+  filter(!is.na(nationality2)) %>% 
+  group_by(class, nationality_cat) %>% 
+  summarize(count = n()) %>% 
+  mutate(percent = (count/sum(count))*100) %>% 
+  arrange(class, desc(percent)) %>%
+  ggplot(aes(y = nationality_cat)) + 
+  geom_col(aes(x = percent), fill = "dark red") + 
+  facet_wrap(~fct_infreq(class)) +
+  geom_text(aes(x = percent, label=round(percent,2)), hjust = -.1, size = 3) +
+  theme_minimal() +
+  labs(x = "Percent of passengers by class", y = "Nationality")
+
+# Average age by class
+dat %>% 
+  group_by(class) %>% 
+  summarize(avg_age = mean(age), std_age = sd(age), min_age = min(age), 
+             max_age = max(age)) %>%
+  kable(caption = "Average Age by Class",
+       col.names = c("Class", "Average Age", "SD Age", "Minimum Age", "Maximum Age"),
+       digits = 2,
+       booktabs = TRUE) %>%
+  kable_styling()
+```
+
+# Examining Survival
+
+## Survival rates
+```{r}
+# Survival rate by class
+dat %>% 
+   group_by(class, survived) %>% 
+   summarize(count = n()) %>% 
+   mutate(percent = (count/sum(count))*100) %>% 
+   arrange(class, survived) %>%
+   kable(caption = "Survival Rate by Class",
+       col.names = c("Class", "Survived", "Count", "Percent"),
+       digits = 2,
+       booktabs = TRUE) %>%
+   kable_styling()
+
+# Survival rate by gender
+dat %>% 
+   group_by(gender, survived) %>% 
+   summarize(count = n()) %>% 
+   mutate(percent = (count/sum(count))*100) %>% 
+   arrange(gender, survived) %>%
+   kable(caption = "Survival Rate by Gender",
+       col.names = c("Gender", "Survived", "Count", "Percent"),
+       digits = 2,
+       booktabs = TRUE) %>%
+   kable_styling()
+
+# Survival rate by class and gender
+dat %>% 
+   group_by(class, gender, survived) %>% 
+   summarize(count = n()) %>% 
+   mutate(percent = (count/sum(count))*100) %>% 
+   arrange(class, gender) %>%
+   kable(caption = "Survival Rate by Class and Gender",
+       col.names = c("Class", "Gender", "Survived", "Count", "Percent"),
+       digits = 2,
+       booktabs = TRUE) %>%
+   kable_styling()
+```
+
+### Density ridges
+```{r}
+surv_classhist <- dat %>% 
+   ggplot(aes(age, class)) +
+   geom_density_ridges(aes(fill = factor(survived))) +
+   labs(title = "Age Distribution of Survival Status By Class", 
+   x = "Age Distribution", y = "Passenger Class") +
+   theme_minimal() +
+   theme(plot.title = element_text(hjust = 0.5))
+
+surv_classhist + scale_fill_manual(name = "Survival", values = c("black","dark red"))
+
+surv_agehist <- dat %>% 
+   ggplot(aes(age, gender)) +
+   geom_density_ridges(aes(fill = factor(survived))) +
+   labs(title = "Age Distribution of Survival Status By Gender", 
+   x = "Age Distribution", y = "Passenger Gender") +
+   theme_minimal() +
+   theme(plot.title = element_text(hjust = 0.5))
+
+surv_agehist + scale_fill_manual(name = "Survival", values = c("black","dark red"))
+
+surv_ageclass_hist <- dat %>% 
+   ggplot(aes(age, gender)) +
+   facet_wrap(~class, nrow=3) +
+   geom_density_ridges(aes(fill = factor(survived))) +
+   labs(title = "Age Distribution of Survival Status By Class and Gender", 
+   x = "Age Distribution", y = "Passenger Gender") +
+   theme_minimal() +
+   theme(plot.title = element_text(hjust = 0.5))
+
+surv_ageclass_hist + scale_fill_manual(name = "Survival", values = c("black","dark red"))
+
+```
+
+## Predicting survival
+```{r}
+modeldat <- dat %>% 
+   select(survived, gender, class, age)
+
+ctree <- ctree(survived ~ gender + class + age, data=modeldat)
+```
+
+```{r, fig.width=12, fig.height=9.25}
+plot(ctree)
+```
+
+
+# Tickets Prices
+
+## Load data
+```{r}
+fares <- import(here("data", "avgfare.csv")) %>% 
+   clean_names()
+
+fares$accommodation <- as.factor(fares$accommodation)
+fares$accommodation <- factor(fares$accommodation, levels = c("First-class parlor suite", "First-class cabin", "Second-class cabin", "Third-class cabin"))
+```
+
+## Calculate inflation
+```{r}
+p1921 <- (17.9/9.7)
+fares$fare_1921 <- p1921*fares$fare_1912
+fares$fare_1921 <- round(fares$fare_1921, 2)
+
+p1931 <- (15.2/9.7)
+fares$fare_1931 <- p1931*fares$fare_1912
+fares$fare_1931 <- round(fares$fare_1931, 2)
+
+p1941 <- (14.7/9.7)
+fares$fare_1941 <- p1941*fares$fare_1912
+fares$fare_1941 <- round(fares$fare_1941, 2)
+
+p1951 <- (26.0/9.7)
+fares$fare_1951 <- p1951*fares$fare_1912
+fares$fare_1951 <- round(fares$fare_1951, 2)
+
+p1961 <- (29.9/9.7)
+fares$fare_1961 <- p1961*fares$fare_1912
+fares$fare_1961 <- round(fares$fare_1961, 2)
+
+p1971 <- (40.5/9.7)
+fares$fare_1971 <- p1971*fares$fare_1912
+fares$fare_1971 <- round(fares$fare_1971, 2)
+
+p1981 <- (90.9/9.7)
+fares$fare_1981 <- p1981*fares$fare_1912
+fares$fare_1981 <- round(fares$fare_1981, 2)
+
+p1991 <- (136.2/9.7)
+fares$fare_1991 <- p1991*fares$fare_1912
+fares$fare_1991 <- round(fares$fare_1991, 2)
+
+p2001 <- (177.1/9.7)
+fares$fare_2001 <- p2001*fares$fare_1912
+fares$fare_2001 <- round(fares$fare_2001, 2)
+
+p2011 <- (224.9/9.7)
+fares$fare_2011 <- p2011*fares$fare_1912
+fares$fare_2011 <- round(fares$fare_2011, 2)
+
+p2021 <- (274.3/9.7)
+fares$fare_2021 <- p2021*fares$fare_1912
+fares$fare_2021 <- round(fares$fare_2021, 2)
+```
+
+## Reshape data
+```{r}
+fares_tidy <- fares %>%
+   pivot_longer(cols = starts_with("fare"),
+   names_to = "year",
+   names_prefix = "fare_",
+   values_to = "price", names_transform = list(year = as.integer))
+```
+
+## Inflation-adjustment plot
+```{r fig.width=8, fig.height=8}
+fare_graph <- fares_tidy %>% 
+   ggplot(aes(year, price, colour=accommodation)) +
+   geom_line() +
+   geom_point() +
+   scale_colour_brewer(palette="Spectral") +
+   facet_wrap(~ accommodation, 4, scales = "free") +
+   xlim(1912,2021) +
+   theme(panel.spacing = unit(1, "lines")) +
+   labs(y = "Price ($USD)", x = "Year", title = "Inflation-Adjusted Titanic Ticket Prices",
+        subtitle = "From 1912 to 2021", colour = "Accommodation") +
+   theme_minimal()
+
+ggplotly(fare_graph)
+```
+
+```{r echo=FALSE, include=FALSE}
+firstavg1912 <- "$150.00"
+firstavg2021 <- "$4,241.74"
+```
+When taking inflation rates into consideration, we see that the average price for a first class cabin in 1912 was **`r firstavg1912`**, which today would be **`r firstavg2021`**
+
+>>>>>>> Stashed changes
 # **References**
