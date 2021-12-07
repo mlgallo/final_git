@@ -205,7 +205,7 @@ As shown in the graph below, ehen taking inflation rates into consideration, we 
 ```{r fig.width=10, fig.height=8}
 ggplotly(fare_graph)
 ```
-Frey et al. (2011) explain that lifeboats were stored closest to the first-class cabins, first-class passengers had more access to information about the disaster, and they were more likely to have a relationship with the officers who gave orders for loading lifeboats, all of which may have given first-class passengers an advantage in survival. Because the Titanic was perceived to be a British ship, it may have been the case that British passengers were favored by crewmembers on the Titanic and had a greater chance of survival compared to passengers who were not British.
+Frey et al. (2011) explain that lifeboats were stored closest to the first-class cabins, first-class passengers had more access to information about the disaster, and they were more likely to have a relationship with the officers who gave orders for loading lifeboats, all of which may have given first-class passengers an advantage in survival. Because the Titanic was perceived to be a British ship, it may have been the case that British passengers were favored by crew members on the Titanic and had a greater chance of survival compared to passengers who were not British.
 
 ## Research Questions
 1. What were the characteristics of the passengers of the Titanic who survived or perished?  
@@ -319,7 +319,7 @@ dat %>%
        booktabs = TRUE) %>%
  kable_classic(full_width = F, html_font = "Cambria")
 ```
-Furthermore, age was also an important factor that contributed to survival. As shown in the figure below, age...**Something here**
+Furthermore, age was an important factor among those who survived. The table below shows passenger age distributed across survival by gender and class. Males between the ages of 18-30 years old had the highest survival rates. Men between the ages of 5 and 18 had the worst survival rates. Women between the ages of 14 and 40 had the highest survival rates. A noteworthy finding is that infants had the highest rates of survival.First class passengers had the largest age distribution among those who survived, regardless of gender. Second class males had the lowest survival rates, followed by third class males. 
 ```{r include=FALSE, warnings=FALSE, message=FALSE}
 surv_ageclass_hist <- dat %>% 
    ggplot(aes(age, gender)) +
